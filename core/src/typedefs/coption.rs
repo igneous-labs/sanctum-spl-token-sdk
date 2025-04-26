@@ -5,13 +5,15 @@ pub enum COptionDiscm {
 }
 
 impl COptionDiscm {
-    pub const NONE: [u8; 4] = [0; 4];
-    pub const SOME: [u8; 4] = [1, 0, 0, 0];
+    pub const LEN: usize = 4;
+
+    pub const NONE: [u8; Self::LEN] = [0; Self::LEN];
+    pub const SOME: [u8; Self::LEN] = [1, 0, 0, 0];
 }
 
 impl COptionDiscm {
     #[inline]
-    pub const fn try_from_arr(arr: &[u8; 4]) -> Option<Self> {
+    pub const fn try_from_arr(arr: &[u8; Self::LEN]) -> Option<Self> {
         Some(match *arr {
             Self::NONE => Self::None,
             Self::SOME => Self::Some,
@@ -25,7 +27,10 @@ impl COptionDiscm {
 /// # Panics
 /// - if discriminant is not valid
 #[inline]
-pub const fn unpack_valid_coption<'a, T>(discm: &[u8; 4], val: &'a T) -> Option<&'a T> {
+pub const fn unpack_valid_coption<'a, T>(
+    discm: &[u8; COptionDiscm::LEN],
+    val: &'a T,
+) -> Option<&'a T> {
     match COptionDiscm::try_from_arr(discm) {
         Some(COptionDiscm::None) => None,
         Some(COptionDiscm::Some) => Some(val),
