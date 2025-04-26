@@ -1,10 +1,10 @@
-mod account_state;
 mod raw;
 
-pub use account_state::*;
 pub use raw::*;
 
-use crate::typedefs::coption::{unpack_valid_coption, COptionDiscm};
+use crate::typedefs::{
+    AccountState, {unpack_valid_coption, COptionDiscm},
+};
 
 /// A token account that has been verified to be valid,
 /// which means:

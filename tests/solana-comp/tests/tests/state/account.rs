@@ -1,5 +1,8 @@
 use proptest::prelude::*;
-use sanctum_spl_token_core::state::account::{AccountState, RawTokenAccount, TokenAccount};
+use sanctum_spl_token_core::{
+    state::account::{RawTokenAccount, TokenAccount},
+    typedefs::AccountState,
+};
 use sanctum_spl_token_test_utils::{any_init_token_acc, is_opt_eq_copt};
 use spl_token::{
     solana_program::program_pack::Pack,

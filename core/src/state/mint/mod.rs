@@ -3,8 +3,7 @@ mod raw;
 pub use raw::*;
 
 use crate::typedefs::{
-    coption::{unpack_valid_coption, COptionDiscm},
-    u8_bool::try_bool_from_u8,
+    try_bool_from_u8, {unpack_valid_coption, COptionDiscm},
 };
 
 /// A mint account that has been verified to be valid,
