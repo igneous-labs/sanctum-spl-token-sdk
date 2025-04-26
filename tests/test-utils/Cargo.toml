@@ -1,0 +1,8 @@
+[package]
+name = "sanctum-spl-token-test-utils"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+proptest = { workspace = true }
+spl-token = { workspace = true }

@@ -3,7 +3,9 @@ resolver = "2"
 
 members = [
     "core",
-    "jiminy", 
+    "jiminy",
+    "tests/solana-comp",
+    "tests/test-utils", 
 ]
 
 [workspace.package]
@@ -14,10 +16,13 @@ version = "0.1.0"
 # In general, keep default-features = false in workspace
 # and enable individual features in indiv crates
 
+# dev deps
+proptest = { version = "^1" }
 
 # solana crates (for dev)
-
+spl-token = "^8"
 
 # workspace members
 sanctum-spl-token-core = { path = "core" }
 sanctum-spl-token-jiminy = { path = "jiminy" }
+sanctum-spl-token-test-utils = { path = "./tests/test-utils" }

@@ -21,7 +21,7 @@ impl<'a> TokenAccount<'a> {
     #[inline]
     pub const fn try_from_raw(raw: &'a RawTokenAccount) -> Option<Self> {
         if COptionDiscm::try_from_arr(&raw.delegate_coption_discm).is_none()
-            || AccountState::try_from_byte(raw.state).is_none()
+            || AccountState::try_from_u8(raw.state).is_none()
             || COptionDiscm::try_from_arr(&raw.native_rent_exemption_coption_discm).is_none()
             || COptionDiscm::try_from_arr(&raw.close_authority_coption_discm).is_none()
         {
@@ -72,7 +72,7 @@ impl TokenAccount<'_> {
 
     #[inline]
     pub const fn state(&self) -> AccountState {
-        match AccountState::try_from_byte(self.0.state) {
+        match AccountState::try_from_u8(self.0.state) {
             Some(a) => a,
             // valid AccountState checked at construction
             None => unreachable!(),

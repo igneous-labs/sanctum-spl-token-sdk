@@ -9,7 +9,7 @@ impl AccountState {
     pub const FROZEN: u8 = 2;
 
     #[inline]
-    pub const fn into_byte(self) -> u8 {
+    pub const fn into_u8(self) -> u8 {
         match self {
             Self::Initialized => Self::INITIALIZED,
             Self::Frozen => Self::FROZEN,
@@ -17,7 +17,7 @@ impl AccountState {
     }
 
     #[inline]
-    pub const fn try_from_byte(byte: u8) -> Option<Self> {
+    pub const fn try_from_u8(byte: u8) -> Option<Self> {
         Some(match byte {
             Self::INITIALIZED => Self::Initialized,
             Self::FROZEN => Self::Frozen,

@@ -1,0 +1,10 @@
+[package]
+name = "solana-comp"
+edition.workspace = true
+version.workspace = true
+
+[dev-dependencies]
+proptest = { workspace = true }
+sanctum-spl-token-core = { workspace = true }
+sanctum-spl-token-test-utils = { workspace = true }
+spl-token = { workspace = true }
