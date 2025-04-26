@@ -4,8 +4,5 @@
 //!
 //! If this was an SDK to be used to build the token program it would likely look different.
 
-mod coption;
-mod u8_bool;
-
 pub mod account;
 pub mod mint;

@@ -4,9 +4,7 @@ mod raw;
 pub use account_state::*;
 pub use raw::*;
 
-use crate::state::coption::COptionDiscm;
-
-use super::coption::unpack_valid_coption;
+use crate::typedefs::coption::{unpack_valid_coption, COptionDiscm};
 
 /// A token account that has been verified to be valid,
 /// which means:

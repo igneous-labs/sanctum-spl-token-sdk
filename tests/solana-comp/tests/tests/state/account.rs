@@ -51,9 +51,9 @@ fn is_us_eq_sol(us: TokenAccount, sol: &SolAccount) -> bool {
 }
 
 fn is_account_state_eq(us: AccountState, sol: SolAccountState) -> bool {
-    match (us, sol) {
+    matches!(
+        (us, sol),
         (AccountState::Frozen, SolAccountState::Frozen)
-        | (AccountState::Initialized, SolAccountState::Initialized) => true,
-        _ => false,
-    }
+            | (AccountState::Initialized, SolAccountState::Initialized)
+    )
 }

@@ -2,7 +2,7 @@ mod raw;
 
 pub use raw::*;
 
-use super::{
+use crate::typedefs::{
     coption::{unpack_valid_coption, COptionDiscm},
     u8_bool::try_bool_from_u8,
 };
