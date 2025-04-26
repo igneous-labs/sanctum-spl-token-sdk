@@ -1,0 +1,6 @@
+[package]
+name = "sanctum-spl-token-jiminy"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
