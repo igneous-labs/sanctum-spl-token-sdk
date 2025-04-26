@@ -1,16 +1,16 @@
 use proptest::prelude::*;
 use sanctum_spl_token_core::state::account::{AccountState, RawTokenAccount, TokenAccount};
-use sanctum_spl_token_test_utils::any_token_acc;
+use sanctum_spl_token_test_utils::{any_init_token_acc, is_opt_eq_copt};
 use spl_token::{
-    solana_program::{program_option::COption, program_pack::Pack, pubkey::Pubkey},
-    state::{Account, AccountState as SolAccountState},
+    solana_program::program_pack::Pack,
+    state::{Account as SolAccount, AccountState as SolAccountState},
 };
 
 proptest! {
     #[test]
-    fn check_account_against_sol(acc in any_token_acc()) {
+    fn check_account_against_sol(acc in any_init_token_acc()) {
         let mut d = [0u8; RawTokenAccount::ACCOUNT_LEN];
-        Account::pack(acc, &mut d).unwrap();
+        SolAccount::pack(acc, &mut d).unwrap();
         let raw =  RawTokenAccount::of_acc_data(&d).unwrap();
         let us = TokenAccount::try_from_raw(raw).unwrap();
 
@@ -25,42 +25,29 @@ proptest! {
     ) {
         let raw = RawTokenAccount::of_acc_data_arr(&likely_invalid);
         let us = TokenAccount::try_from_raw(raw);
-        // use sol as the ref because Uninitialized accounts
-        // are valid for sol but not for us
-        match Account::unpack(&likely_invalid) {
-            Ok(acc) => {
+        match SolAccount::unpack(&likely_invalid) {
+            Ok(acc) if !matches!(acc.state, SolAccountState::Uninitialized) => {
                 prop_assert!(is_us_eq_sol(us.unwrap(), &acc), "{us:#?}, {acc:#?}");
             },
-            Err(_) => {
+            _ => {
                 prop_assert!(us.is_none());
             }
         }
     }
 }
 
-fn is_us_eq_sol(us: TokenAccount, sol: &Account) -> bool {
+fn is_us_eq_sol(us: TokenAccount, sol: &SolAccount) -> bool {
     us.amount() == sol.amount
         && us.auth() == sol.owner.as_array()
-        && is_opt_eq(
-            us.close_auth().map(|p| *p),
-            sol.close_authority.map(Pubkey::to_bytes),
+        && is_opt_eq_copt(
+            us.close_auth(),
+            sol.close_authority.as_ref().map(|k| k.as_array()),
         )
-        && is_opt_eq(
-            us.delegate().map(|p| *p),
-            sol.delegate.map(Pubkey::to_bytes),
-        )
+        && is_opt_eq_copt(us.delegate(), sol.delegate.as_ref().map(|k| k.as_array()))
         && us.delegated_amount() == sol.delegated_amount
         && us.mint() == sol.mint.as_array()
-        && is_opt_eq(us.native_rent_exemption(), sol.is_native)
+        && is_opt_eq_copt(us.native_rent_exemption(), sol.is_native)
         && is_account_state_eq(us.state(), sol.state)
-}
-
-fn is_opt_eq<T: PartialEq>(us: Option<T>, sol: COption<T>) -> bool {
-    match (us, sol) {
-        (None, COption::None) => true,
-        (Some(us), COption::Some(sol)) => us == sol,
-        _ => false,
-    }
 }
 
 fn is_account_state_eq(us: AccountState, sol: SolAccountState) -> bool {
