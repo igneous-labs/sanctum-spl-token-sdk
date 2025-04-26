@@ -1,43 +1,32 @@
-//! The raw account data representation of a token account
+//! The raw account data representation of a token mint
 
 use core::mem::{align_of, size_of};
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RawTokenAccount {
-    pub mint: [u8; 32],
+pub struct RawMint {
+    pub mint_auth_discm: [u8; 4],
+    pub mint_auth: [u8; 32],
 
-    /// AKA `owner`
-    pub auth: [u8; 32],
+    // they couldve had a 8-byte aligned struct with no internal padding
+    // but they chose to put the 4-byte COption discriminant at the start ._.
+    pub supply: [u8; 8],
 
-    pub amount: [u8; 8],
-    pub delegate_coption_discm: [u8; 4],
-    pub delegate: [u8; 32],
-
-    // this single u8 here fuks alignment up so now
-    // we have the worst of both worlds:
-    // wasted space + unaligned memory accesses _|_
-    //
-    // I bet this was because the fields following this were
-    // initially unplanned and tacked on afterwards
-    pub state: u8,
-
-    pub native_rent_exemption_coption_discm: [u8; 4],
-    pub native_rent_exemption: [u8; 8],
-    pub delegated_amount: [u8; 8],
-    pub close_auth_coption_discm: [u8; 4],
-    pub close_auth: [u8; 32],
+    pub decimals: u8,
+    pub is_init: u8,
+    pub freeze_auth_discm: [u8; 4],
+    pub freeze_auth: [u8; 32],
 }
 
-impl RawTokenAccount {
-    pub const ACCOUNT_LEN: usize = 165;
+impl RawMint {
+    pub const ACCOUNT_LEN: usize = 82;
 }
 
-const _ASSERT_RAW_SIZE: () = assert!(size_of::<RawTokenAccount>() == RawTokenAccount::ACCOUNT_LEN);
-const _ASSERT_RAW_ALIGN: () = assert!(align_of::<RawTokenAccount>() == 1);
+const _ASSERT_RAW_SIZE: () = assert!(size_of::<RawMint>() == RawMint::ACCOUNT_LEN);
+const _ASSERT_RAW_ALIGN: () = assert!(align_of::<RawMint>() == 1);
 
 // pointer casting "serialization"
-impl RawTokenAccount {
+impl RawMint {
     #[inline]
     pub const fn as_acc_data_arr(&self) -> &[u8; Self::ACCOUNT_LEN] {
         // safety:
@@ -48,7 +37,7 @@ impl RawTokenAccount {
 }
 
 // pointer casting "deserialization"
-impl RawTokenAccount {
+impl RawMint {
     /// Returns `None` if `account_data` is not of the right size
     #[inline]
     pub const fn of_acc_data(account_data: &[u8]) -> Option<&Self> {

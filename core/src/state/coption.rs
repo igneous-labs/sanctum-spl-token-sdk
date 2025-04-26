@@ -19,3 +19,17 @@ impl COptionDiscm {
         })
     }
 }
+
+/// Unpack a COption, assuming the discriminant has been validated beforehand
+///
+/// # Panics
+/// - if discriminant is not valid
+#[inline]
+pub const fn unpack_valid_coption<'a, T>(discm: &[u8; 4], val: &'a T) -> Option<&'a T> {
+    match COptionDiscm::try_from_arr(discm) {
+        Some(COptionDiscm::None) => None,
+        Some(COptionDiscm::Some) => Some(val),
+        // assume coption prevalidated beforehand
+        None => unreachable!(),
+    }
+}

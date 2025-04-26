@@ -6,6 +6,8 @@ pub use raw::*;
 
 use crate::state::coption::COptionDiscm;
 
+use super::coption::unpack_valid_coption;
+
 /// A token account that has been verified to be valid,
 /// which means:
 /// - all enums are of valid bitpatterns
@@ -23,7 +25,7 @@ impl<'a> TokenAccount<'a> {
         if COptionDiscm::try_from_arr(&raw.delegate_coption_discm).is_none()
             || AccountState::try_from_u8(raw.state).is_none()
             || COptionDiscm::try_from_arr(&raw.native_rent_exemption_coption_discm).is_none()
-            || COptionDiscm::try_from_arr(&raw.close_authority_coption_discm).is_none()
+            || COptionDiscm::try_from_arr(&raw.close_auth_coption_discm).is_none()
         {
             None
         } else {
@@ -55,8 +57,8 @@ impl TokenAccount<'_> {
 
     /// AKA token account owner, renamed to avoid clash with account.owner
     #[inline]
-    pub const fn authority(&self) -> &[u8; 32] {
-        &self.0.authority
+    pub const fn auth(&self) -> &[u8; 32] {
+        &self.0.auth
     }
 
     #[inline]
@@ -100,21 +102,8 @@ impl TokenAccount<'_> {
     }
 
     #[inline]
-    pub const fn close_authority(&self) -> Option<&[u8; 32]> {
+    pub const fn close_auth(&self) -> Option<&[u8; 32]> {
         // valid coption checked at construction
-        unpack_valid_coption(
-            &self.0.close_authority_coption_discm,
-            &self.0.close_authority,
-        )
-    }
-}
-
-#[inline]
-const fn unpack_valid_coption<'a, T>(discm: &[u8; 4], val: &'a T) -> Option<&'a T> {
-    match COptionDiscm::try_from_arr(discm) {
-        Some(COptionDiscm::None) => None,
-        Some(COptionDiscm::Some) => Some(val),
-        // assume coption prevalidated beforehand
-        None => unreachable!(),
+        unpack_valid_coption(&self.0.close_auth_coption_discm, &self.0.close_auth)
     }
 }

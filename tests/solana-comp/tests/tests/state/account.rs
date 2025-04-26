@@ -40,9 +40,9 @@ proptest! {
 
 fn is_us_eq_sol(us: TokenAccount, sol: &Account) -> bool {
     us.amount() == sol.amount
-        && us.authority() == sol.owner.as_array()
+        && us.auth() == sol.owner.as_array()
         && is_opt_eq(
-            us.close_authority().map(|p| *p),
+            us.close_auth().map(|p| *p),
             sol.close_authority.map(Pubkey::to_bytes),
         )
         && is_opt_eq(
