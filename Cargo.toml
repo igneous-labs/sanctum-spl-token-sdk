@@ -5,6 +5,7 @@ members = [
     "core",
     "jiminy",
     "tests/solana-comp",
+    "tests/test-programs/*",
     "tests/test-utils", 
 ]
 
@@ -15,11 +16,23 @@ version = "0.1.0"
 [workspace.dependencies]
 # In general, keep default-features = false in workspace
 # and enable individual features in indiv crates
+# Dont really care as much for dev deps
+generic-array-struct = { version = "=0.3.0-bc", default-features = false }
+
+# jiminy crates
+jiminy-cpi = { git = "https://github.com/igneous-labs/jiminy.git", branch = "master" }
+jiminy-entrypoint = { git = "https://github.com/igneous-labs/jiminy.git", branch = "master" }
 
 # dev deps
 proptest = { version = "^1" }
 
 # solana crates (for dev)
+mollusk-svm = "^0.1"
+mollusk-svm-programs-token = { version = "^0.1", default-features = false, features = ["token"] }
+solana-account = "^2"
+solana-logger = "^2"
+solana-pubkey = "^2"
+solana-rent = "^2"
 spl-token = "^8"
 
 # workspace members

@@ -4,5 +4,10 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
+mollusk-svm = { workspace = true }
 proptest = { workspace = true }
+solana-account = { workspace = true }
+solana-logger = { workspace = true }
+solana-pubkey = { workspace = true }
+solana-rent = { workspace = true }
 spl-token = { workspace = true }

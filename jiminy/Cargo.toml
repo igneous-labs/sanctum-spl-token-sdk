@@ -4,3 +4,5 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+jiminy-cpi = { workspace = true }
+sanctum-spl-token-core = { workspace = true }

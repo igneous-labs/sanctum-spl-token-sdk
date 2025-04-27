@@ -4,6 +4,6 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+generic-array-struct = { workspace = true }
 
 [dev-dependencies]
-

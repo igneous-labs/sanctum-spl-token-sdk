@@ -17,7 +17,7 @@ pub struct TokenAccount<'a>(&'a RawTokenAccount);
 /// Constructors
 impl<'a> TokenAccount<'a> {
     /// The only way to safely obtain this struct.
-    /// Returns None if `raw` is not a valid token account.
+    /// Returns None if `raw` is not a valid initialized token account.
     #[inline]
     pub const fn try_from_raw(raw: &'a RawTokenAccount) -> Option<Self> {
         if COptionDiscm::try_from_arr(&raw.delegate_coption_discm).is_none()

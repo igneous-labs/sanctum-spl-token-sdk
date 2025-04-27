@@ -17,7 +17,7 @@ pub struct Mint<'a>(&'a RawMint);
 /// Constructors
 impl<'a> Mint<'a> {
     /// The only way to safely obtain this struct.
-    /// Returns None if `raw` is not a valid token account.
+    /// Returns None if `raw` is not a valid initialized mint account.
     #[inline]
     pub const fn try_from_raw(raw: &'a RawMint) -> Option<Self> {
         let is_init = match try_bool_from_u8(raw.is_init) {
@@ -37,7 +37,7 @@ impl<'a> Mint<'a> {
     /// # Safety
     /// `raw` must be a valid mint account, which means:
     /// - all types are of valid bitpatterns (COption, bool)
-    /// - not in uninitialized state
+    /// - initialized
     #[inline]
     pub const unsafe fn from_raw_unchecked(raw: &'a RawMint) -> Self {
         Self(raw)
