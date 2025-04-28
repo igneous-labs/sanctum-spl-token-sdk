@@ -34,7 +34,7 @@ const AMT: u64 = 29_125_461_325;
 const SRC_ACC_IDX: usize = 1;
 const DST_ACC_IDX: usize = 2;
 
-// CUs: 5872
+// CUs: 5875
 #[test]
 fn transfer_all_non_native_cus() {
     let svm = mollusk();
@@ -72,7 +72,7 @@ fn transfer_all_non_native_cus() {
         });
 }
 
-// CUs: 5840
+// CUs: 5837
 #[test]
 fn transfer_arg_non_native_cus() {
     let svm = mollusk();

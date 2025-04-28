@@ -33,7 +33,7 @@ fn process_ix(
     };
     let [spl_token, src, dst, auth] = [spl_token, src, dst, auth].map(|h| *h);
 
-    let amt = match data {
+    let amt = match *data {
         [] => {
             let src_acc = accounts.get(src);
             let src_acc = RawTokenAccount::of_acc_data(src_acc.data())
@@ -43,7 +43,12 @@ fn process_ix(
                 ))?;
             src_acc.amount()
         }
-        b if b.len() == 8 => u64::from_le_bytes(*<&[u8; 8]>::try_from(b).unwrap()),
+        // this looks stupid, but less error prone than
+        // `if len() == 8`, because length is explicit.
+        // Perf characteristics:
+        // - causes this branch to take 3 fewer CUs, but the empty branch above to take 3 more
+        // - binary sizes are the same
+        [i0, i1, i2, i3, i4, i5, i6, i7] => u64::from_le_bytes([i0, i1, i2, i3, i4, i5, i6, i7]),
         _ => {
             return Err(ProgramError::from_builtin(
                 BuiltInProgramError::InvalidInstructionData,
