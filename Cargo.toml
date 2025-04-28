@@ -17,6 +17,7 @@ version = "0.1.0"
 # In general, keep default-features = false in workspace
 # and enable individual features in indiv crates
 # Dont really care as much for dev deps
+const-crypto = { version = "^0.3", default-features = false }
 generic-array-struct = { version = "=0.3.0-bc", default-features = false }
 
 # jiminy crates

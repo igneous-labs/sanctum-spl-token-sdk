@@ -4,4 +4,5 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+const-crypto = { workspace = true }
 generic-array-struct = { workspace = true }
