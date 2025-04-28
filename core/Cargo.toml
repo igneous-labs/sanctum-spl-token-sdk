@@ -5,5 +5,3 @@ edition.workspace = true
 
 [dependencies]
 generic-array-struct = { workspace = true }
-
-[dev-dependencies]

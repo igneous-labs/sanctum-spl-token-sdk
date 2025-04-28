@@ -395,6 +395,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1628fb46dfa0b37568d12e5edd512553eccf6a22a78e8bde00bb4aed84d5bdbf"
 
 [[package]]
+name = "burn-test"
+version = "0.1.0"
+dependencies = [
+ "jiminy-cpi",
+ "jiminy-entrypoint",
+ "mollusk-svm",
+ "mollusk-svm-programs-token",
+ "proptest",
+ "sanctum-spl-token-jiminy",
+ "sanctum-spl-token-test-utils",
+ "solana-account",
+ "solana-pubkey",
+ "spl-token",
+]
+
+[[package]]
 name = "bv"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

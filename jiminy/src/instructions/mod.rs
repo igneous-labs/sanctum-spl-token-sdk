@@ -4,6 +4,7 @@ use jiminy_cpi::{account::AccountHandle, AccountPerms};
 
 mod internal_utils;
 
+pub mod burn;
 pub mod mint_to;
 pub mod transfer;
 

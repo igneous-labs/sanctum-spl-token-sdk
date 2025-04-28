@@ -34,7 +34,7 @@ pub const fn unpack_valid_coption<'a, T>(
     match COptionDiscm::try_from_arr(discm) {
         Some(COptionDiscm::None) => None,
         Some(COptionDiscm::Some) => Some(val),
-        // assume coption prevalidated beforehand
+        // assume coption validated beforehand
         None => unreachable!(),
     }
 }

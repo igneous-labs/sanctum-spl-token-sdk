@@ -1,11 +1,11 @@
-//! .so file size 3072
+//! .so file size 3216
 
 #![cfg(feature = "test-sbf")]
 
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use proptest::prelude::*;
-use sanctum_spl_token_jiminy::sanctum_spl_token_core::instructions::mint_to::{
-    MintToIxAccs, MINT_TO_IX_IS_SIGNER, MINT_TO_IX_IS_WRITABLE,
+use sanctum_spl_token_jiminy::sanctum_spl_token_core::instructions::burn::{
+    BurnIxAccs, BURN_IX_IS_SIGNER, BURN_IX_IS_WRITABLE,
 };
 use sanctum_spl_token_test_utils::{
     account_from_mint, account_from_token_acc, are_all_accounts_rent_exempt, init_mint_acc,
@@ -21,31 +21,32 @@ use spl_token::{
     state::{Account as TokenAccount, Mint},
 };
 
-const PROG_NAME: &str = "mint_to_test";
-const PROG_ID: Pubkey = solana_pubkey::pubkey!("HTwaWpPCBUwi8kx3nMSY3MKviwwf7mjZncYAgagwXYur");
+const PROG_NAME: &str = "burn_test";
+const PROG_ID: Pubkey = solana_pubkey::pubkey!("DWT1tG7AMF5NNGnKV1aeixYSGdmRqgUJiB7jqFtLXCEh");
 
 const MINT: Pubkey = solana_pubkey::pubkey!("FmqrDYpnekE92iPotx8PGQed8fQ9DbeMuE7ASeA9Q72x");
-const TO: Pubkey = solana_pubkey::pubkey!("2mQbNpB6tbF6cguY7M6NjGozGLTUwJVeUBceWqEH3gkt");
+const FROM: Pubkey = solana_pubkey::pubkey!("2mQbNpB6tbF6cguY7M6NjGozGLTUwJVeUBceWqEH3gkt");
 const AUTH: Pubkey = solana_pubkey::pubkey!("2AHbbAHQQrQsEP7yrE9PGWpkn7Uz27PKJBByRwkurnWG");
-const SUPPLY: u64 = 1234;
+const SUPPLY: u64 = 29_125_461_325;
 const DECIMALS: u8 = 9;
-const AMT: u64 = 29_125_461_325;
+const AMT: u64 = 1_234;
+const INIT_AMT: u64 = AMT * 2;
 
-const MINT_ACC_IDX: usize = 1;
-const TO_ACC_IDX: usize = 2;
+const FROM_ACC_IDX: usize = 1;
+const MINT_ACC_IDX: usize = 2;
 
-// CUs: 5710
+// CUs: 5890
 #[test]
-fn mint_to_all_cus() {
+fn burn_all_cus() {
     let svm = mollusk();
     let accounts = ix_accounts(
+        FROM,
+        token_acc_for_trf(MINT, INIT_AMT, false, AUTH),
         MINT,
-        init_mint_acc(Some(AUTH), SUPPLY, DECIMALS, None),
-        TO,
-        token_acc_for_trf(MINT, 0, false, Default::default()),
+        init_mint_acc(None, SUPPLY, DECIMALS, None),
         AUTH,
     );
-    let instr = ix(MINT, TO, AUTH, None);
+    let instr = ix(FROM, MINT, AUTH, None);
 
     let InstructionResult {
         compute_units_consumed,
@@ -62,26 +63,26 @@ fn mint_to_all_cus() {
     assert!(is_tx_balanced(&accounts, &resulting_accounts));
 
     let mint_acc = &resulting_accounts[MINT_ACC_IDX].1;
-    assert_eq!(u64::MAX, Mint::unpack(&mint_acc.data).unwrap().supply);
-    let to_acc = &resulting_accounts[TO_ACC_IDX].1;
     assert_eq!(
-        u64::MAX - SUPPLY,
-        TokenAccount::unpack(&to_acc.data).unwrap().amount
+        SUPPLY - INIT_AMT,
+        Mint::unpack(&mint_acc.data).unwrap().supply
     );
+    let from_acc = &resulting_accounts[FROM_ACC_IDX].1;
+    assert_eq!(0, TokenAccount::unpack(&from_acc.data).unwrap().amount);
 }
 
-// CUs: 5683
+// CUs: 5852
 #[test]
-fn mint_to_arg_cus() {
+fn burn_arg_cus() {
     let svm = mollusk();
     let accounts = ix_accounts(
+        FROM,
+        token_acc_for_trf(MINT, INIT_AMT, false, AUTH),
         MINT,
-        init_mint_acc(Some(AUTH), SUPPLY, DECIMALS, None),
-        TO,
-        token_acc_for_trf(MINT, 0, false, Default::default()),
+        init_mint_acc(None, SUPPLY, DECIMALS, None),
         AUTH,
     );
-    let instr = ix(MINT, TO, AUTH, Some(AMT));
+    let instr = ix(FROM, MINT, AUTH, Some(AMT));
 
     let InstructionResult {
         compute_units_consumed,
@@ -98,36 +99,40 @@ fn mint_to_arg_cus() {
     assert!(is_tx_balanced(&accounts, &resulting_accounts));
 
     let mint_acc = &resulting_accounts[MINT_ACC_IDX].1;
-    assert_eq!(SUPPLY + AMT, Mint::unpack(&mint_acc.data).unwrap().supply);
-    let to_acc = &resulting_accounts[TO_ACC_IDX].1;
-    assert_eq!(AMT, TokenAccount::unpack(&to_acc.data).unwrap().amount);
+    assert_eq!(SUPPLY - AMT, Mint::unpack(&mint_acc.data).unwrap().supply);
+    let from_acc = &resulting_accounts[FROM_ACC_IDX].1;
+    assert_eq!(
+        INIT_AMT - AMT,
+        TokenAccount::unpack(&from_acc.data).unwrap().amount
+    );
 }
 
 proptest! {
     #[test]
-    fn mint_to_all_cases(
-        (mint, to) in
+    fn burn_all_cases(
+        (mint, from) in
             any::<[u8; 32]>().prop_flat_map(|mint| (Just(mint), any::<[u8; 32]>().prop_filter("", move |k| *k != mint))),
         auth: [u8; 32],
         decimals: u8,
-        (supply, init_amt, mint_amt) in
+        (supply, init_amt, burn_amt) in
             any::<u64>()
-                .prop_flat_map(|supply| (Just(supply), 0..=supply, 0..=u64::MAX - supply))
+                .prop_flat_map(|supply| (Just(supply), 0..=supply))
+                .prop_flat_map(|(supply, init_amt)| (Just(supply), Just(init_amt), 0..=init_amt))
     ) {
-        let [mint, to, auth] = [mint, to, auth]
+        let [mint, from, auth] = [mint, from, auth]
             .map(Pubkey::new_from_array);
         let svm = mollusk();
         silence_mollusk_prog_logs();
 
-        for arg in [None, Some(mint_amt)] {
+        for arg in [None, Some(burn_amt)] {
             let accounts = ix_accounts(
+                from,
+                token_acc_for_trf(mint, init_amt, false, auth),
                 mint,
-                init_mint_acc(Some(auth), supply, decimals, None),
-                to,
-                token_acc_for_trf(mint, init_amt, false, Default::default()),
+                init_mint_acc(None, supply, decimals, None),
                 auth,
             );
-            let instr = ix(mint, to, auth, arg);
+            let instr = ix(from, mint, auth, arg);
 
             let InstructionResult {
                 raw_result,
@@ -140,15 +145,15 @@ proptest! {
             are_all_accounts_rent_exempt(&resulting_accounts).unwrap();
             prop_assert!(is_tx_balanced(&accounts, &resulting_accounts));
 
-            let expected_mint_amt = match arg {
-                None => u64::MAX - supply,
+            let expected_burn_amt = match arg {
+                None => init_amt,
                 Some(a) => a,
             };
 
             let mint_acc = &resulting_accounts[MINT_ACC_IDX].1;
-            assert_eq!(supply + expected_mint_amt, Mint::unpack(&mint_acc.data).unwrap().supply);
-            let to_acc = &resulting_accounts[TO_ACC_IDX].1;
-            assert_eq!(init_amt + expected_mint_amt, TokenAccount::unpack(&to_acc.data).unwrap().amount);
+            assert_eq!(supply - expected_burn_amt, Mint::unpack(&mint_acc.data).unwrap().supply);
+            let to_acc = &resulting_accounts[FROM_ACC_IDX].1;
+            assert_eq!(init_amt - expected_burn_amt, TokenAccount::unpack(&to_acc.data).unwrap().amount);
         }
     }
 }
@@ -160,22 +165,22 @@ fn mollusk() -> Mollusk {
 }
 
 fn ix_accounts(
+    from: Pubkey,
+    from_acc: TokenAccount,
     mint: Pubkey,
     mint_acc: Mint,
-    to: Pubkey,
-    to_acc: TokenAccount,
     auth: Pubkey,
 ) -> [(Pubkey, Account); 4] {
     [
         mollusk_svm_programs_token::token::keyed_account(),
+        (from, account_from_token_acc(from_acc)),
         (mint, account_from_mint(mint_acc)),
-        (to, account_from_token_acc(to_acc)),
         (auth, Account::default()),
     ]
 }
 
-fn ix(mint: Pubkey, to: Pubkey, auth: Pubkey, amt: Option<u64>) -> Instruction {
-    type MintToIxKeys = MintToIxAccs<Pubkey>;
+fn ix(from: Pubkey, mint: Pubkey, auth: Pubkey, amt: Option<u64>) -> Instruction {
+    type BurnIxKeys = BurnIxAccs<Pubkey>;
 
     Instruction {
         program_id: PROG_ID,
@@ -185,13 +190,13 @@ fn ix(mint: Pubkey, to: Pubkey, auth: Pubkey, amt: Option<u64>) -> Instruction {
             is_writable: false,
         })
         .chain(key_signer_writable_to_metas(
-            &MintToIxKeys::memset(PROG_ID)
+            &BurnIxKeys::memset(PROG_ID)
+                .with_from(from)
                 .with_mint(mint)
-                .with_to(to)
                 .with_auth(auth)
                 .0,
-            &MINT_TO_IX_IS_SIGNER.0,
-            &MINT_TO_IX_IS_WRITABLE.0,
+            &BURN_IX_IS_SIGNER.0,
+            &BURN_IX_IS_WRITABLE.0,
         ))
         .collect(),
         data: amt.map_or_else(Vec::new, |amt| Vec::from(amt.to_le_bytes())),
