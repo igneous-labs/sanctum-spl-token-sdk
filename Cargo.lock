@@ -1438,6 +1438,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "mint-to-test"
+version = "0.1.0"
+dependencies = [
+ "jiminy-cpi",
+ "jiminy-entrypoint",
+ "mollusk-svm",
+ "mollusk-svm-programs-token",
+ "proptest",
+ "sanctum-spl-token-jiminy",
+ "sanctum-spl-token-test-utils",
+ "solana-account",
+ "solana-pubkey",
+ "spl-token",
+]
+
+[[package]]
 name = "mio"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

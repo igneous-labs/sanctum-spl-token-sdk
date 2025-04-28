@@ -4,9 +4,13 @@
 
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use proptest::prelude::*;
+use sanctum_spl_token_jiminy::sanctum_spl_token_core::instructions::transfer::{
+    TransferIxAccs, TRANSFER_IX_IS_SIGNER, TRANSFER_IX_IS_WRITABLE,
+};
 use sanctum_spl_token_test_utils::{
     account_from_token_acc, are_all_accounts_rent_exempt, is_tx_balanced,
-    silence_mollusk_prog_logs, token_acc_for_trf, TOKEN_ACC_RENT_EXEMPT_LAMPORTS,
+    key_signer_writable_to_metas, silence_mollusk_prog_logs, token_acc_for_trf,
+    TOKEN_ACC_RENT_EXEMPT_LAMPORTS,
 };
 use solana_account::Account;
 use solana_pubkey::Pubkey;
@@ -23,7 +27,7 @@ const PROG_ID: Pubkey = solana_pubkey::pubkey!("8AxeW1wz52Qe8cWV5NZf8eSF2QaEy5xh
 
 const SRC: Pubkey = solana_pubkey::pubkey!("FmqrDYpnekE92iPotx8PGQed8fQ9DbeMuE7ASeA9Q72x");
 const DST: Pubkey = solana_pubkey::pubkey!("2mQbNpB6tbF6cguY7M6NjGozGLTUwJVeUBceWqEH3gkt");
-const SRC_AUTH: Pubkey = solana_pubkey::pubkey!("2AHbbAHQQrQsEP7yrE9PGWpkn7Uz27PKJBByRwkurnWG");
+const AUTH: Pubkey = solana_pubkey::pubkey!("2AHbbAHQQrQsEP7yrE9PGWpkn7Uz27PKJBByRwkurnWG");
 const MINT: Pubkey = solana_pubkey::pubkey!("5oVNBeEEQvYi1cX3ir8Dx5n1P7pdxydbGF2X4TxVusJm");
 const AMT: u64 = 29_125_461_325;
 
@@ -36,12 +40,12 @@ fn transfer_all_non_native_cus() {
     let svm = mollusk();
     let accounts = ix_accounts(
         SRC,
-        token_acc_for_trf(MINT, AMT, false, SRC_AUTH),
+        token_acc_for_trf(MINT, AMT, false, AUTH),
         DST,
         token_acc_for_trf(MINT, 0, false, Default::default()),
-        SRC_AUTH,
+        AUTH,
     );
-    let instr = ix(SRC, DST, SRC_AUTH, None);
+    let instr = ix(SRC, DST, AUTH, None);
 
     let InstructionResult {
         compute_units_consumed,
@@ -74,12 +78,12 @@ fn transfer_arg_non_native_cus() {
     let svm = mollusk();
     let accounts = ix_accounts(
         SRC,
-        token_acc_for_trf(MINT, AMT, false, SRC_AUTH),
+        token_acc_for_trf(MINT, AMT, false, AUTH),
         DST,
         token_acc_for_trf(MINT, 0, false, Default::default()),
-        SRC_AUTH,
+        AUTH,
     );
-    let instr = ix(SRC, DST, SRC_AUTH, Some(AMT));
+    let instr = ix(SRC, DST, AUTH, Some(AMT));
 
     let InstructionResult {
         compute_units_consumed,
@@ -112,14 +116,14 @@ proptest! {
         (mint, src, dst) in
             any::<[u8; 32]>().prop_flat_map(|mint| (Just(mint), any::<[u8; 32]>().prop_filter("", move |k| *k != mint)))
                 .prop_flat_map(|(mint, src)| (Just(mint), Just(src),  any::<[u8; 32]>().prop_filter("", move |k| *k != mint && *k != src))),
-        src_auth: [u8; 32],
+        auth: [u8; 32],
         is_native: bool,
         (dst_amt, src_amt, trf_amt) in
             (0..=u64::MAX - TOKEN_ACC_RENT_EXEMPT_LAMPORTS)
                 .prop_flat_map(|x| (Just(x), 0..=u64::MAX - TOKEN_ACC_RENT_EXEMPT_LAMPORTS - x))
                 .prop_flat_map(|(x, y)| (Just(x), Just(y), 0..=y)),
     ) {
-        let [mint, src, dst, src_auth] = [mint, src, dst, src_auth]
+        let [mint, src, dst, auth] = [mint, src, dst, auth]
             .map(Pubkey::new_from_array);
         let svm = mollusk();
         silence_mollusk_prog_logs();
@@ -127,12 +131,12 @@ proptest! {
         for arg in [None, Some(trf_amt)] {
             let accounts = ix_accounts(
                 src,
-                token_acc_for_trf(mint, src_amt, is_native, src_auth),
+                token_acc_for_trf(mint, src_amt, is_native, auth),
                 dst,
                 token_acc_for_trf(mint, dst_amt, is_native, Default::default()),
-                src_auth,
+                auth,
             );
-            let instr = ix(src, dst, src_auth, arg);
+            let instr = ix(src, dst, auth, arg);
 
             let InstructionResult {
                 raw_result,
@@ -174,42 +178,36 @@ fn ix_accounts(
     src_acc: TokenAccount,
     dst: Pubkey,
     dst_acc: TokenAccount,
-    src_auth: Pubkey,
+    auth: Pubkey,
 ) -> [(Pubkey, Account); 4] {
     [
         mollusk_svm_programs_token::token::keyed_account(),
         (src, account_from_token_acc(src_acc)),
         (dst, account_from_token_acc(dst_acc)),
-        (src_auth, Account::default()),
+        (auth, Account::default()),
     ]
 }
 
-fn ix(src: Pubkey, dst: Pubkey, src_auth: Pubkey, amt: Option<u64>) -> Instruction {
+fn ix(src: Pubkey, dst: Pubkey, auth: Pubkey, amt: Option<u64>) -> Instruction {
+    type TransferIxKeys = TransferIxAccs<Pubkey>;
+
     Instruction {
         program_id: PROG_ID,
-        accounts: [
-            AccountMeta {
-                pubkey: spl_token::ID,
-                is_signer: false,
-                is_writable: false,
-            },
-            AccountMeta {
-                pubkey: src,
-                is_signer: false,
-                is_writable: true,
-            },
-            AccountMeta {
-                pubkey: dst,
-                is_signer: false,
-                is_writable: true,
-            },
-            AccountMeta {
-                pubkey: src_auth,
-                is_signer: true,
-                is_writable: false,
-            },
-        ]
-        .into(),
+        accounts: core::iter::once(AccountMeta {
+            pubkey: spl_token::ID,
+            is_signer: false,
+            is_writable: false,
+        })
+        .chain(key_signer_writable_to_metas(
+            &TransferIxKeys::memset(PROG_ID)
+                .with_src(src)
+                .with_dst(dst)
+                .with_auth(auth)
+                .0,
+            &TRANSFER_IX_IS_SIGNER.0,
+            &TRANSFER_IX_IS_WRITABLE.0,
+        ))
+        .collect(),
         data: amt.map_or_else(Vec::new, |amt| Vec::from(amt.to_le_bytes())),
     }
 }

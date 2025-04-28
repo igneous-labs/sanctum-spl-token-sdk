@@ -6,4 +6,5 @@
 
 mod internal_utils;
 
+pub mod mint_to;
 pub mod transfer;

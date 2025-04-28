@@ -10,7 +10,7 @@ use crate::instructions::internal_utils::{caba, impl_memset};
 pub struct TransferIxAccs<T> {
     pub src: T,
     pub dst: T,
-    pub src_auth: T,
+    pub auth: T,
 }
 
 impl<T: Copy> TransferIxAccs<T> {
@@ -20,7 +20,7 @@ impl<T: Copy> TransferIxAccs<T> {
 pub type TransferIxAccsFlag = TransferIxAccs<bool>;
 
 pub const TRANSFER_IX_IS_SIGNER: TransferIxAccsFlag =
-    TransferIxAccsFlag::memset(false).const_with_src_auth(true);
+    TransferIxAccsFlag::memset(false).const_with_auth(true);
 
 pub const TRANSFER_IX_IS_WRITABLE: TransferIxAccsFlag = TransferIxAccsFlag::memset(false)
     .const_with_src(true)
