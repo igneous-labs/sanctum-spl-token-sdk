@@ -43,12 +43,18 @@ fn process_ix(
                 ))?;
             token_acc.amount()
         }
+
+        // Everything here applies to similar code in the other test programs
+        //
         // this looks stupid, but less error prone than
         // `if len() == 8`, because length is explicit.
+        //
         // Perf characteristics:
-        // - causes this branch to take 3 fewer CUs, but the empty branch above to take 3 more
-        // - binary sizes are the same
+        // - Causes this branch to take 3 fewer CUs, but the empty branch above to take 3 more
+        //  - But if you put this branch before `[]`, this change gets reversed
+        // - Binary sizes are the same
         [i0, i1, i2, i3, i4, i5, i6, i7] => u64::from_le_bytes([i0, i1, i2, i3, i4, i5, i6, i7]),
+
         _ => {
             return Err(ProgramError::from_builtin(
                 BuiltInProgramError::InvalidInstructionData,

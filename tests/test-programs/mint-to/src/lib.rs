@@ -43,11 +43,6 @@ fn process_ix(
                 ))?;
             u64::MAX - mint_acc.supply()
         }
-        // this looks stupid, but less error prone than
-        // `if len() == 8`, because length is explicit.
-        // Perf characteristics:
-        // - causes this branch to take 3 fewer CUs, but the empty branch above to take 3 more
-        // - binary sizes are the same
         [i0, i1, i2, i3, i4, i5, i6, i7] => u64::from_le_bytes([i0, i1, i2, i3, i4, i5, i6, i7]),
         _ => {
             return Err(ProgramError::from_builtin(
