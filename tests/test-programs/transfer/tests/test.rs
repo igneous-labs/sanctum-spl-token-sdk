@@ -1,4 +1,4 @@
-//! .so file size 3312
+//! .so file size 3384
 
 #![cfg(feature = "test-sbf")]
 
@@ -44,7 +44,7 @@ thread_local! {
     };
 }
 
-// CUs: 5886
+// CUs: 5890
 #[test]
 fn transfer_all_non_native_cus() {
     let accounts = ix_accounts(
@@ -82,7 +82,7 @@ fn transfer_all_non_native_cus() {
     });
 }
 
-// CUs: 5848
+// CUs: 5854
 #[test]
 fn transfer_arg_non_native_cus() {
     let accounts = ix_accounts(
@@ -122,7 +122,7 @@ fn transfer_arg_non_native_cus() {
 
 proptest! {
     #[test]
-    fn transfer_all_cases(
+    fn transfer_all_valid_cases(
         (mint, src, dst) in
             any::<[u8; 32]>().prop_flat_map(|mint| (Just(mint), any::<[u8; 32]>().prop_filter("", move |k| *k != mint)))
                 .prop_flat_map(|(mint, src)| (Just(mint), Just(src),  any::<[u8; 32]>().prop_filter("", move |k| *k != mint && *k != src))),
@@ -214,6 +214,9 @@ fn ix(src: Pubkey, dst: Pubkey, auth: Pubkey, amt: Option<u64>) -> Instruction {
             &TRANSFER_IX_IS_WRITABLE.0,
         ))
         .collect(),
-        data: amt.map_or_else(Vec::new, |amt| Vec::from(amt.to_le_bytes())),
+        data: amt.map_or_else(
+            || vec![0],
+            |amt| core::iter::once(0).chain(amt.to_le_bytes()).collect(),
+        ),
     }
 }
