@@ -4,10 +4,11 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
+solana-account = { workspace = true }
+solana-pubkey = { workspace = true }
+spl-token = { workspace = true }
+
+[target.'cfg(not(target_os = "solana"))'.dependencies]
 mollusk-svm = { workspace = true }
 proptest = { workspace = true }
-solana-account = { workspace = true }
 solana-logger = { workspace = true }
-solana-pubkey = { workspace = true }
-solana-rent = { workspace = true }
-spl-token = { workspace = true }

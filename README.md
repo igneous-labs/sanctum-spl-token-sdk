@@ -12,3 +12,12 @@ Currently only implements a subset of what we need for our programs.
 ## Development
 
 This section contains dev info for people who wish to work on the library.
+
+### solana toolchain vers
+
+```sh
+$ cargo-build-sbf --version
+solana-cargo-build-sbf 2.3.7
+platform-tools v1.48
+rustc 1.84.1
+```

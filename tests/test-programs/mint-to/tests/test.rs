@@ -1,15 +1,18 @@
-//! .so file size 3072
+//! .so file size 3168
 
 #![cfg(feature = "test-sbf")]
 
-use mollusk_svm::{result::InstructionResult, Mollusk};
+use mollusk_svm::{
+    result::{Check, InstructionResult},
+    Mollusk,
+};
 use proptest::prelude::*;
 use sanctum_spl_token_jiminy::sanctum_spl_token_core::instructions::mint_to::{
     MintToIxAccs, MINT_TO_IX_IS_SIGNER, MINT_TO_IX_IS_WRITABLE,
 };
 use sanctum_spl_token_test_utils::{
-    account_from_mint, account_from_token_acc, are_all_accounts_rent_exempt, init_mint_acc,
-    is_tx_balanced, key_signer_writable_to_metas, silence_mollusk_prog_logs, token_acc_for_trf,
+    account_from_mint, account_from_token_acc, init_mint_acc, is_tx_balanced,
+    key_signer_writable_to_metas, silence_mollusk_prog_logs, token_acc_for_trf,
 };
 use solana_account::Account;
 use solana_pubkey::Pubkey;
@@ -34,10 +37,17 @@ const AMT: u64 = 29_125_461_325;
 const MINT_ACC_IDX: usize = 1;
 const TO_ACC_IDX: usize = 2;
 
-// CUs: 5710
+thread_local! {
+    static SVM: Mollusk = {
+        let mut svm = Mollusk::new(&PROG_ID, PROG_NAME);
+        mollusk_svm_programs_token::token::add_program(&mut svm);
+        svm
+    };
+}
+
+// CUs: 5721
 #[test]
 fn mint_to_all_cus() {
-    let svm = mollusk();
     let accounts = ix_accounts(
         MINT,
         init_mint_acc(Some(AUTH), SUPPLY, DECIMALS, None),
@@ -47,33 +57,33 @@ fn mint_to_all_cus() {
     );
     let instr = ix(MINT, TO, AUTH, None);
 
-    let InstructionResult {
-        compute_units_consumed,
-        raw_result,
-        resulting_accounts,
-        ..
-    } = svm.process_instruction(&instr, &accounts);
+    SVM.with(|svm| {
+        let InstructionResult {
+            compute_units_consumed,
+            raw_result,
+            resulting_accounts,
+            ..
+        } = svm.process_and_validate_instruction(&instr, &accounts, &[Check::all_rent_exempt()]);
 
-    raw_result.unwrap();
+        raw_result.unwrap();
 
-    eprintln!("{compute_units_consumed} CUs");
+        eprintln!("{compute_units_consumed} CUs");
 
-    are_all_accounts_rent_exempt(&resulting_accounts).unwrap();
-    assert!(is_tx_balanced(&accounts, &resulting_accounts));
+        assert!(is_tx_balanced(&accounts, &resulting_accounts));
 
-    let mint_acc = &resulting_accounts[MINT_ACC_IDX].1;
-    assert_eq!(u64::MAX, Mint::unpack(&mint_acc.data).unwrap().supply);
-    let to_acc = &resulting_accounts[TO_ACC_IDX].1;
-    assert_eq!(
-        u64::MAX - SUPPLY,
-        TokenAccount::unpack(&to_acc.data).unwrap().amount
-    );
+        let mint_acc = &resulting_accounts[MINT_ACC_IDX].1;
+        assert_eq!(u64::MAX, Mint::unpack(&mint_acc.data).unwrap().supply);
+        let to_acc = &resulting_accounts[TO_ACC_IDX].1;
+        assert_eq!(
+            u64::MAX - SUPPLY,
+            TokenAccount::unpack(&to_acc.data).unwrap().amount
+        );
+    });
 }
 
-// CUs: 5683
+// CUs: 5694
 #[test]
 fn mint_to_arg_cus() {
-    let svm = mollusk();
     let accounts = ix_accounts(
         MINT,
         init_mint_acc(Some(AUTH), SUPPLY, DECIMALS, None),
@@ -83,24 +93,25 @@ fn mint_to_arg_cus() {
     );
     let instr = ix(MINT, TO, AUTH, Some(AMT));
 
-    let InstructionResult {
-        compute_units_consumed,
-        raw_result,
-        resulting_accounts,
-        ..
-    } = svm.process_instruction(&instr, &accounts);
+    SVM.with(|svm| {
+        let InstructionResult {
+            compute_units_consumed,
+            raw_result,
+            resulting_accounts,
+            ..
+        } = svm.process_and_validate_instruction(&instr, &accounts, &[Check::all_rent_exempt()]);
 
-    raw_result.unwrap();
+        raw_result.unwrap();
 
-    eprintln!("{compute_units_consumed} CUs");
+        eprintln!("{compute_units_consumed} CUs");
 
-    are_all_accounts_rent_exempt(&resulting_accounts).unwrap();
-    assert!(is_tx_balanced(&accounts, &resulting_accounts));
+        assert!(is_tx_balanced(&accounts, &resulting_accounts));
 
-    let mint_acc = &resulting_accounts[MINT_ACC_IDX].1;
-    assert_eq!(SUPPLY + AMT, Mint::unpack(&mint_acc.data).unwrap().supply);
-    let to_acc = &resulting_accounts[TO_ACC_IDX].1;
-    assert_eq!(AMT, TokenAccount::unpack(&to_acc.data).unwrap().amount);
+        let mint_acc = &resulting_accounts[MINT_ACC_IDX].1;
+        assert_eq!(SUPPLY + AMT, Mint::unpack(&mint_acc.data).unwrap().supply);
+        let to_acc = &resulting_accounts[TO_ACC_IDX].1;
+        assert_eq!(AMT, TokenAccount::unpack(&to_acc.data).unwrap().amount);
+    });
 }
 
 proptest! {
@@ -116,7 +127,6 @@ proptest! {
     ) {
         let [mint, to, auth] = [mint, to, auth]
             .map(Pubkey::new_from_array);
-        let svm = mollusk();
         silence_mollusk_prog_logs();
 
         for arg in [None, Some(mint_amt)] {
@@ -129,34 +139,31 @@ proptest! {
             );
             let instr = ix(mint, to, auth, arg);
 
-            let InstructionResult {
-                raw_result,
-                resulting_accounts,
-                ..
-            } = svm.process_instruction(&instr, &accounts);
+            SVM.with(|svm| {
+                let InstructionResult {
+                    raw_result,
+                    resulting_accounts,
+                    ..
+                } = svm.process_and_validate_instruction(&instr, &accounts, &[Check::all_rent_exempt()]);
 
-            raw_result.unwrap();
+                raw_result.unwrap();
 
-            are_all_accounts_rent_exempt(&resulting_accounts).unwrap();
-            prop_assert!(is_tx_balanced(&accounts, &resulting_accounts));
+                prop_assert!(is_tx_balanced(&accounts, &resulting_accounts));
 
-            let expected_mint_amt = match arg {
-                None => u64::MAX - supply,
-                Some(a) => a,
-            };
+                let expected_mint_amt = match arg {
+                    None => u64::MAX - supply,
+                    Some(a) => a,
+                };
 
-            let mint_acc = &resulting_accounts[MINT_ACC_IDX].1;
-            assert_eq!(supply + expected_mint_amt, Mint::unpack(&mint_acc.data).unwrap().supply);
-            let to_acc = &resulting_accounts[TO_ACC_IDX].1;
-            assert_eq!(init_amt + expected_mint_amt, TokenAccount::unpack(&to_acc.data).unwrap().amount);
+                let mint_acc = &resulting_accounts[MINT_ACC_IDX].1;
+                assert_eq!(supply + expected_mint_amt, Mint::unpack(&mint_acc.data).unwrap().supply);
+                let to_acc = &resulting_accounts[TO_ACC_IDX].1;
+                assert_eq!(init_amt + expected_mint_amt, TokenAccount::unpack(&to_acc.data).unwrap().amount);
+
+                Ok(())
+            }).unwrap();
         }
     }
-}
-
-fn mollusk() -> Mollusk {
-    let mut svm = Mollusk::new(&PROG_ID, PROG_NAME);
-    mollusk_svm_programs_token::token::add_program(&mut svm);
-    svm
 }
 
 fn ix_accounts(

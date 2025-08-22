@@ -1,16 +1,18 @@
-//! .so file size 3216
+//! .so file size 3312
 
 #![cfg(feature = "test-sbf")]
 
-use mollusk_svm::{result::InstructionResult, Mollusk};
+use mollusk_svm::{
+    result::{Check, InstructionResult},
+    Mollusk,
+};
 use proptest::prelude::*;
 use sanctum_spl_token_jiminy::sanctum_spl_token_core::instructions::transfer::{
     TransferIxAccs, TRANSFER_IX_IS_SIGNER, TRANSFER_IX_IS_WRITABLE,
 };
 use sanctum_spl_token_test_utils::{
-    account_from_token_acc, are_all_accounts_rent_exempt, is_tx_balanced,
-    key_signer_writable_to_metas, silence_mollusk_prog_logs, token_acc_for_trf,
-    TOKEN_ACC_RENT_EXEMPT_LAMPORTS,
+    account_from_token_acc, is_tx_balanced, key_signer_writable_to_metas,
+    silence_mollusk_prog_logs, token_acc_for_trf, TOKEN_ACC_RENT_EXEMPT_LAMPORTS,
 };
 use solana_account::Account;
 use solana_pubkey::Pubkey;
@@ -34,10 +36,17 @@ const AMT: u64 = 29_125_461_325;
 const SRC_ACC_IDX: usize = 1;
 const DST_ACC_IDX: usize = 2;
 
-// CUs: 5875
+thread_local! {
+    static SVM: Mollusk = {
+        let mut svm = Mollusk::new(&PROG_ID, PROG_NAME);
+        mollusk_svm_programs_token::token::add_program(&mut svm);
+        svm
+    };
+}
+
+// CUs: 5886
 #[test]
 fn transfer_all_non_native_cus() {
-    let svm = mollusk();
     let accounts = ix_accounts(
         SRC,
         token_acc_for_trf(MINT, AMT, false, AUTH),
@@ -47,35 +56,35 @@ fn transfer_all_non_native_cus() {
     );
     let instr = ix(SRC, DST, AUTH, None);
 
-    let InstructionResult {
-        compute_units_consumed,
-        raw_result,
-        resulting_accounts,
-        ..
-    } = svm.process_instruction(&instr, &accounts);
+    SVM.with(|svm| {
+        let InstructionResult {
+            compute_units_consumed,
+            raw_result,
+            resulting_accounts,
+            ..
+        } = svm.process_and_validate_instruction(&instr, &accounts, &[Check::all_rent_exempt()]);
 
-    raw_result.unwrap();
+        raw_result.unwrap();
 
-    eprintln!("{compute_units_consumed} CUs");
+        eprintln!("{compute_units_consumed} CUs");
 
-    are_all_accounts_rent_exempt(&resulting_accounts).unwrap();
-    assert!(is_tx_balanced(&accounts, &resulting_accounts));
+        assert!(is_tx_balanced(&accounts, &resulting_accounts));
 
-    [(SRC_ACC_IDX, 0), (DST_ACC_IDX, AMT)]
-        .iter()
-        .for_each(|(idx, expected_amt)| {
-            let acc = &resulting_accounts[*idx].1;
-            assert_eq!(
-                *expected_amt,
-                TokenAccount::unpack(&acc.data).unwrap().amount
-            );
-        });
+        [(SRC_ACC_IDX, 0), (DST_ACC_IDX, AMT)]
+            .iter()
+            .for_each(|(idx, expected_amt)| {
+                let acc = &resulting_accounts[*idx].1;
+                assert_eq!(
+                    *expected_amt,
+                    TokenAccount::unpack(&acc.data).unwrap().amount
+                );
+            });
+    });
 }
 
-// CUs: 5837
+// CUs: 5848
 #[test]
 fn transfer_arg_non_native_cus() {
-    let svm = mollusk();
     let accounts = ix_accounts(
         SRC,
         token_acc_for_trf(MINT, AMT, false, AUTH),
@@ -85,29 +94,30 @@ fn transfer_arg_non_native_cus() {
     );
     let instr = ix(SRC, DST, AUTH, Some(AMT));
 
-    let InstructionResult {
-        compute_units_consumed,
-        raw_result,
-        resulting_accounts,
-        ..
-    } = svm.process_instruction(&instr, &accounts);
+    SVM.with(|svm| {
+        let InstructionResult {
+            compute_units_consumed,
+            raw_result,
+            resulting_accounts,
+            ..
+        } = svm.process_and_validate_instruction(&instr, &accounts, &[Check::all_rent_exempt()]);
 
-    raw_result.unwrap();
+        raw_result.unwrap();
 
-    eprintln!("{compute_units_consumed} CUs");
+        eprintln!("{compute_units_consumed} CUs");
 
-    are_all_accounts_rent_exempt(&resulting_accounts).unwrap();
-    assert!(is_tx_balanced(&accounts, &resulting_accounts));
+        assert!(is_tx_balanced(&accounts, &resulting_accounts));
 
-    [(SRC_ACC_IDX, 0), (DST_ACC_IDX, AMT)]
-        .iter()
-        .for_each(|(idx, expected_amt)| {
-            let acc = &resulting_accounts[*idx].1;
-            assert_eq!(
-                *expected_amt,
-                TokenAccount::unpack(&acc.data).unwrap().amount
-            );
-        });
+        [(SRC_ACC_IDX, 0), (DST_ACC_IDX, AMT)]
+            .iter()
+            .for_each(|(idx, expected_amt)| {
+                let acc = &resulting_accounts[*idx].1;
+                assert_eq!(
+                    *expected_amt,
+                    TokenAccount::unpack(&acc.data).unwrap().amount
+                );
+            });
+    })
 }
 
 proptest! {
@@ -125,7 +135,6 @@ proptest! {
     ) {
         let [mint, src, dst, auth] = [mint, src, dst, auth]
             .map(Pubkey::new_from_array);
-        let svm = mollusk();
         silence_mollusk_prog_logs();
 
         for arg in [None, Some(trf_amt)] {
@@ -138,39 +147,36 @@ proptest! {
             );
             let instr = ix(src, dst, auth, arg);
 
-            let InstructionResult {
-                raw_result,
-                resulting_accounts,
-                ..
-            } = svm.process_instruction(&instr, &accounts);
+            SVM.with(|svm| {
+                let InstructionResult {
+                    raw_result,
+                    resulting_accounts,
+                    ..
+                } = svm.process_and_validate_instruction(&instr, &accounts, &[Check::all_rent_exempt()]);
 
-            raw_result.unwrap();
+                raw_result.unwrap();
 
-            are_all_accounts_rent_exempt(&resulting_accounts).unwrap();
-            prop_assert!(is_tx_balanced(&accounts, &resulting_accounts));
+                prop_assert!(is_tx_balanced(&accounts, &resulting_accounts));
 
-            let expected_trf_amt = match arg {
-                None => src_amt,
-                Some(a) => a,
-            };
-            for (idx, expected_amt) in [
-                (SRC_ACC_IDX, src_amt - expected_trf_amt),
-                (DST_ACC_IDX, dst_amt + expected_trf_amt),
-            ] {
-                let acc = &resulting_accounts[idx].1;
-                prop_assert_eq!(
-                    expected_amt,
-                    TokenAccount::unpack(&acc.data).unwrap().amount
-                );
-            }
+                let expected_trf_amt = match arg {
+                    None => src_amt,
+                    Some(a) => a,
+                };
+                for (idx, expected_amt) in [
+                    (SRC_ACC_IDX, src_amt - expected_trf_amt),
+                    (DST_ACC_IDX, dst_amt + expected_trf_amt),
+                ] {
+                    let acc = &resulting_accounts[idx].1;
+                    prop_assert_eq!(
+                        expected_amt,
+                        TokenAccount::unpack(&acc.data).unwrap().amount
+                    );
+                }
+
+                Ok(())
+            }).unwrap();
         }
     }
-}
-
-fn mollusk() -> Mollusk {
-    let mut svm = Mollusk::new(&PROG_ID, PROG_NAME);
-    mollusk_svm_programs_token::token::add_program(&mut svm);
-    svm
 }
 
 fn ix_accounts(
