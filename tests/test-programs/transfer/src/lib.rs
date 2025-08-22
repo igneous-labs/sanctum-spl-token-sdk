@@ -11,8 +11,7 @@ use sanctum_spl_token_jiminy::{
     instructions::transfer::{transfer_checked_ix, transfer_ix},
     sanctum_spl_token_core::{
         instructions::transfer::{
-            NewTransferCheckedIxAccsBuilder, NewTransferIxAccsBuilder, TransferCheckedIxData,
-            TransferIxData,
+            TransferCheckedIxAccs, TransferCheckedIxData, TransferIxAccs, TransferIxData,
         },
         state::{
             account::{RawTokenAccount, TokenAccount},
@@ -21,7 +20,7 @@ use sanctum_spl_token_jiminy::{
     },
 };
 
-const MAX_ACCOUNTS: usize = 4;
+const MAX_ACCOUNTS: usize = 5;
 
 type Accounts<'a> = jiminy_entrypoint::account::Accounts<'a, MAX_ACCOUNTS>;
 type Cpi = jiminy_cpi::Cpi<MAX_ACCOUNTS>;
@@ -38,7 +37,7 @@ fn process_ix(
             BuiltInProgramError::NotEnoughAccountKeys,
         ));
     };
-    let [spl_token, src, dst, auth] = *a;
+    let [spl_token, src] = *a;
 
     let Some((discm, amt_data)) = data.split_first() else {
         return Err(ProgramError::custom(1));
@@ -64,28 +63,27 @@ fn process_ix(
 
     match discm {
         // Transfer
-        0 => Cpi::new().invoke_signed(
-            accounts,
-            transfer_ix(
-                spl_token,
-                NewTransferIxAccsBuilder::start()
-                    .with_src(src)
-                    .with_auth(auth)
-                    .with_dst(dst)
-                    .build(),
-                &TransferIxData::new(amt),
-            ),
-            &[],
-        ),
+        0 => {
+            let Some((_spl_token, a)) = accounts.as_slice().split_last_chunk() else {
+                return Err(ProgramError::from_builtin(
+                    BuiltInProgramError::NotEnoughAccountKeys,
+                ));
+            };
+            Cpi::new().invoke_signed(
+                accounts,
+                transfer_ix(spl_token, TransferIxAccs(*a), &TransferIxData::new(amt)),
+                &[],
+            )
+        }
         // TransferChecked
         1 => {
-            let mint = accounts
-                .as_slice()
-                .get(4)
-                .ok_or(ProgramError::from_builtin(
+            let Some((_spl_token, a)) = accounts.as_slice().split_last_chunk() else {
+                return Err(ProgramError::from_builtin(
                     BuiltInProgramError::NotEnoughAccountKeys,
-                ))?;
-            let mint_acc = accounts.get(*mint);
+                ));
+            };
+            let accs = TransferCheckedIxAccs(*a);
+            let mint_acc = accounts.get(*accs.mint());
             let decimals = RawMint::of_acc_data(mint_acc.data())
                 .and_then(Mint::try_from_raw)
                 .ok_or(ProgramError::from_builtin(
@@ -94,16 +92,7 @@ fn process_ix(
                 .decimals();
             Cpi::new().invoke_signed(
                 accounts,
-                transfer_checked_ix(
-                    spl_token,
-                    NewTransferCheckedIxAccsBuilder::start()
-                        .with_src(src)
-                        .with_auth(auth)
-                        .with_dst(dst)
-                        .with_mint(*mint)
-                        .build(),
-                    &TransferCheckedIxData::new(amt, decimals),
-                ),
+                transfer_checked_ix(spl_token, accs, &TransferCheckedIxData::new(amt, decimals)),
                 &[],
             )
         }

@@ -134,14 +134,15 @@ proptest! {
             .map(Pubkey::new_from_array);
         silence_mollusk_prog_logs();
 
+        let accounts = ix_accounts(
+            from,
+            token_acc_for_trf(mint, init_amt, false, auth),
+            mint,
+            init_mint_acc(None, supply, decimals, None),
+            auth,
+        );
+
         for arg in [None, Some(burn_amt)] {
-            let accounts = ix_accounts(
-                from,
-                token_acc_for_trf(mint, init_amt, false, auth),
-                mint,
-                init_mint_acc(None, supply, decimals, None),
-                auth,
-            );
             let instr = ix(from, mint, auth, arg);
 
             SVM.with(|svm| {
