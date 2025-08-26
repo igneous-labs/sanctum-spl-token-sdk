@@ -1,4 +1,4 @@
-//! .so file size 6128
+//! .so file size 6080
 
 #![cfg(feature = "test-sbf")]
 
@@ -13,7 +13,7 @@ use sanctum_spl_token_jiminy::sanctum_spl_token_core::instructions::transfer::{
 };
 use sanctum_spl_token_test_utils::{
     account_from_mint, account_from_token_acc, init_mint_acc, is_tx_balanced,
-    key_signer_writable_to_metas, silence_mollusk_prog_logs, token_acc_for_trf,
+    key_signer_writable_to_metas, save_cus_to_file, silence_mollusk_prog_logs, token_acc_for_trf,
     TOKEN_ACC_RENT_EXEMPT_LAMPORTS,
 };
 use solana_account::Account;
@@ -46,7 +46,6 @@ thread_local! {
     };
 }
 
-// CUs: 5906
 #[test]
 fn transfer_all_non_native_cus() {
     let accounts = ix_accounts(
@@ -68,8 +67,6 @@ fn transfer_all_non_native_cus() {
 
         raw_result.unwrap();
 
-        eprintln!("{compute_units_consumed} CUs");
-
         assert!(is_tx_balanced(&accounts, &resulting_accounts));
 
         [(SRC_ACC_IDX, 0), (DST_ACC_IDX, AMT)]
@@ -81,10 +78,11 @@ fn transfer_all_non_native_cus() {
                     TokenAccount::unpack(&acc.data).unwrap().amount
                 );
             });
+
+        save_cus_to_file("all-non-native", compute_units_consumed);
     });
 }
 
-// CUs: 5870
 #[test]
 fn transfer_arg_non_native_cus() {
     let accounts = ix_accounts(
@@ -106,8 +104,6 @@ fn transfer_arg_non_native_cus() {
 
         raw_result.unwrap();
 
-        eprintln!("{compute_units_consumed} CUs");
-
         assert!(is_tx_balanced(&accounts, &resulting_accounts));
 
         [(SRC_ACC_IDX, 0), (DST_ACC_IDX, AMT)]
@@ -119,10 +115,11 @@ fn transfer_arg_non_native_cus() {
                     TokenAccount::unpack(&acc.data).unwrap().amount
                 );
             });
+
+        save_cus_to_file("arg-non-native", compute_units_consumed);
     })
 }
 
-// CUs: 7566
 #[test]
 fn transfer_checked_arg_non_native_cus() {
     let accounts = ix_accounts_checked(
@@ -146,8 +143,6 @@ fn transfer_checked_arg_non_native_cus() {
 
         raw_result.unwrap();
 
-        eprintln!("{compute_units_consumed} CUs");
-
         assert!(is_tx_balanced(&accounts, &resulting_accounts));
 
         [(SRC_ACC_IDX, 0), (DST_ACC_IDX, AMT)]
@@ -159,6 +154,8 @@ fn transfer_checked_arg_non_native_cus() {
                     TokenAccount::unpack(&acc.data).unwrap().amount
                 );
             });
+
+        save_cus_to_file("checked-arg-non-native", compute_units_consumed);
     })
 }
 

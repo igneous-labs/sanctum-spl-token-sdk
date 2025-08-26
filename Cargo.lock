@@ -1288,7 +1288,7 @@ checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 [[package]]
 name = "jiminy-account"
 version = "0.1.0"
-source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#cd4a64ec114000122298971f1a96b775f716de44"
+source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#dbadf03ab9df3b8b62bc997eddcd1d58a964db18"
 dependencies = [
  "jiminy-program-error",
 ]
@@ -1296,7 +1296,7 @@ dependencies = [
 [[package]]
 name = "jiminy-cpi"
 version = "0.1.0"
-source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#cd4a64ec114000122298971f1a96b775f716de44"
+source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#dbadf03ab9df3b8b62bc997eddcd1d58a964db18"
 dependencies = [
  "jiminy-account",
  "jiminy-pda",
@@ -1307,7 +1307,7 @@ dependencies = [
 [[package]]
 name = "jiminy-entrypoint"
 version = "0.1.0"
-source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#cd4a64ec114000122298971f1a96b775f716de44"
+source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#dbadf03ab9df3b8b62bc997eddcd1d58a964db18"
 dependencies = [
  "jiminy-account",
  "jiminy-syscall",
@@ -1316,7 +1316,7 @@ dependencies = [
 [[package]]
 name = "jiminy-pda"
 version = "0.1.0"
-source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#cd4a64ec114000122298971f1a96b775f716de44"
+source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#dbadf03ab9df3b8b62bc997eddcd1d58a964db18"
 dependencies = [
  "jiminy-syscall",
 ]
@@ -1324,12 +1324,12 @@ dependencies = [
 [[package]]
 name = "jiminy-program-error"
 version = "0.1.0"
-source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#cd4a64ec114000122298971f1a96b775f716de44"
+source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#dbadf03ab9df3b8b62bc997eddcd1d58a964db18"
 
 [[package]]
 name = "jiminy-syscall"
 version = "0.1.0"
-source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#cd4a64ec114000122298971f1a96b775f716de44"
+source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#dbadf03ab9df3b8b62bc997eddcd1d58a964db18"
 
 [[package]]
 name = "js-sys"
@@ -1506,9 +1506,9 @@ dependencies = [
 
 [[package]]
 name = "mollusk-svm"
-version = "0.4.2"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ac533eca9acad4fb7b4714557cd6263d494c59c02c96036196d4143b68795a8"
+checksum = "7c01cfd03829e0c7c5a0decb92cdc2963501268fb48851eea03f9017bd0eae83"
 dependencies = [
  "agave-feature-set",
  "agave-precompiles",
@@ -1546,9 +1546,9 @@ dependencies = [
 
 [[package]]
 name = "mollusk-svm-error"
-version = "0.4.2"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4135aa8a9c9069b30109262e63795959040888586ea8f90809c4365a6d439ee9"
+checksum = "237a9aeed06a7181fa7b5dc4437ccf39cba9cf2062938aa44bc5373bffebacd1"
 dependencies = [
  "solana-pubkey",
  "thiserror 1.0.69",
@@ -1556,9 +1556,9 @@ dependencies = [
 
 [[package]]
 name = "mollusk-svm-keys"
-version = "0.4.2"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b230d33b0194b126be2c37a19bf4d59d8e80a5ce63e8d3d4135a6cbf89ed3302"
+checksum = "cf086261ca149a8b03c75ef17b3ac83ca985ff46598c3a298f6e85bdc69d7420"
 dependencies = [
  "mollusk-svm-error",
  "solana-account",
@@ -1569,9 +1569,9 @@ dependencies = [
 
 [[package]]
 name = "mollusk-svm-programs-token"
-version = "0.4.2"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3efcb4cb61dbf93457a233025a403ba320b831f2c15da9e9a337c38e951eafa7"
+checksum = "b905d2d511d5962219aca8b2de088ca351ecf3c64767e879726abc4b5fbefe72"
 dependencies = [
  "mollusk-svm",
  "solana-account",
@@ -1582,9 +1582,9 @@ dependencies = [
 
 [[package]]
 name = "mollusk-svm-result"
-version = "0.4.2"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4c788b78a077f73b466dbfa7510804136075fd8e6f3eca8392018991c46fef3"
+checksum = "46d33c72e491320ce1a884c60e0e23768c44c0990accb0ecbd20e698b21a2c25"
 dependencies = [
  "solana-account",
  "solana-instruction",

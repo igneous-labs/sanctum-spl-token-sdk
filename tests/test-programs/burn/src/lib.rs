@@ -7,9 +7,9 @@
 
 use jiminy_cpi::program_error::{BuiltInProgramError, ProgramError};
 use sanctum_spl_token_jiminy::{
-    instructions::burn::{burn_ix, BurnIxAccounts},
+    instructions::burn::burn_ix_account_handle_perms,
     sanctum_spl_token_core::{
-        instructions::burn::BurnIxData,
+        instructions::burn::{BurnIxData, NewBurnIxAccsBuilder},
         state::account::{RawTokenAccount, TokenAccount},
     },
 };
@@ -62,15 +62,17 @@ fn process_ix(
         }
     };
 
+    let spl_token_key = *accounts.get(spl_token).key();
     Cpi::new().invoke_signed(
         accounts,
-        burn_ix(
-            spl_token,
-            BurnIxAccounts::memset(spl_token)
+        &spl_token_key,
+        BurnIxData::new(amt).as_buf(),
+        burn_ix_account_handle_perms(
+            NewBurnIxAccsBuilder::start()
                 .with_from(from)
                 .with_mint(mint)
-                .with_auth(auth),
-            &BurnIxData::new(amt),
+                .with_auth(auth)
+                .build(),
         ),
         &[],
     )
