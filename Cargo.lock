@@ -1288,7 +1288,7 @@ checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 [[package]]
 name = "jiminy-account"
 version = "0.1.0"
-source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#dbadf03ab9df3b8b62bc997eddcd1d58a964db18"
+source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#92a09dc8acfe89de5cc52ae4b915b29dafa6ff21"
 dependencies = [
  "jiminy-program-error",
 ]
@@ -1296,7 +1296,7 @@ dependencies = [
 [[package]]
 name = "jiminy-cpi"
 version = "0.1.0"
-source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#dbadf03ab9df3b8b62bc997eddcd1d58a964db18"
+source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#92a09dc8acfe89de5cc52ae4b915b29dafa6ff21"
 dependencies = [
  "jiminy-account",
  "jiminy-pda",
@@ -1307,7 +1307,7 @@ dependencies = [
 [[package]]
 name = "jiminy-entrypoint"
 version = "0.1.0"
-source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#dbadf03ab9df3b8b62bc997eddcd1d58a964db18"
+source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#92a09dc8acfe89de5cc52ae4b915b29dafa6ff21"
 dependencies = [
  "jiminy-account",
  "jiminy-syscall",
@@ -1316,7 +1316,7 @@ dependencies = [
 [[package]]
 name = "jiminy-pda"
 version = "0.1.0"
-source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#dbadf03ab9df3b8b62bc997eddcd1d58a964db18"
+source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#92a09dc8acfe89de5cc52ae4b915b29dafa6ff21"
 dependencies = [
  "jiminy-syscall",
 ]
@@ -1324,12 +1324,12 @@ dependencies = [
 [[package]]
 name = "jiminy-program-error"
 version = "0.1.0"
-source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#dbadf03ab9df3b8b62bc997eddcd1d58a964db18"
+source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#92a09dc8acfe89de5cc52ae4b915b29dafa6ff21"
 
 [[package]]
 name = "jiminy-syscall"
 version = "0.1.0"
-source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#dbadf03ab9df3b8b62bc997eddcd1d58a964db18"
+source = "git+https://github.com/igneous-labs/jiminy.git?branch=master#92a09dc8acfe89de5cc52ae4b915b29dafa6ff21"
 
 [[package]]
 name = "js-sys"
