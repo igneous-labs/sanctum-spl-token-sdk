@@ -1,5 +1,3 @@
-//! .so file size 6080
-
 #![cfg(feature = "test-sbf")]
 
 use mollusk_svm::{
@@ -13,8 +11,8 @@ use sanctum_spl_token_jiminy::sanctum_spl_token_core::instructions::transfer::{
 };
 use sanctum_spl_token_test_utils::{
     account_from_mint, account_from_token_acc, init_mint_acc, is_tx_balanced,
-    key_signer_writable_to_metas, save_cus_to_file, silence_mollusk_prog_logs, token_acc_for_trf,
-    TOKEN_ACC_RENT_EXEMPT_LAMPORTS,
+    key_signer_writable_to_metas, save_binsize_to_file, save_cus_to_file,
+    silence_mollusk_prog_logs, token_acc_for_trf, TOKEN_ACC_RENT_EXEMPT_LAMPORTS,
 };
 use solana_account::Account;
 use solana_pubkey::Pubkey;
@@ -44,6 +42,11 @@ thread_local! {
         mollusk_svm_programs_token::token::add_program(&mut svm);
         svm
     };
+}
+
+#[test]
+fn save_binsize() {
+    save_binsize_to_file(PROG_NAME);
 }
 
 #[test]
