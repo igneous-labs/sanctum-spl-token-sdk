@@ -8,11 +8,8 @@ pub mod burn;
 pub mod mint_to;
 pub mod transfer;
 
-pub type SplTokenInstr<'account, 'data, const ACCOUNTS: usize> = jiminy_cpi::Instr<
-    'account,
-    'data,
-    Zip<
-        array::IntoIter<AccountHandle<'account>, ACCOUNTS>,
-        array::IntoIter<AccountPerms, ACCOUNTS>,
-    >,
+/// `impl IntoIterator<Item = (AccountHandle, AccountPerms)>`
+pub type SplTokenAccountHandlePerms<'account, const ACCOUNTS: usize> = Zip<
+    array::IntoIter<AccountHandle<'account>, ACCOUNTS>,
+    array::IntoIter<AccountPerms, ACCOUNTS>,
 >;

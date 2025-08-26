@@ -8,7 +8,9 @@
 
 use jiminy_cpi::program_error::{BuiltInProgramError, ProgramError};
 use sanctum_spl_token_jiminy::{
-    instructions::transfer::{transfer_checked_ix, transfer_ix},
+    instructions::transfer::{
+        transfer_checked_ix_account_handle_perms, transfer_ix_account_handle_perms,
+    },
     sanctum_spl_token_core::{
         instructions::transfer::{
             TransferCheckedIxAccs, TransferCheckedIxData, TransferIxAccs, TransferIxData,
@@ -61,6 +63,8 @@ fn process_ix(
         }
     };
 
+    let spl_token_key = *accounts.get(spl_token).key();
+
     match discm {
         // Transfer
         0 => {
@@ -71,7 +75,9 @@ fn process_ix(
             };
             Cpi::new().invoke_signed(
                 accounts,
-                transfer_ix(spl_token, TransferIxAccs(*a), &TransferIxData::new(amt)),
+                &spl_token_key,
+                TransferIxData::new(amt).as_buf(),
+                transfer_ix_account_handle_perms(TransferIxAccs(*a)),
                 &[],
             )
         }
@@ -92,7 +98,9 @@ fn process_ix(
                 .decimals();
             Cpi::new().invoke_signed(
                 accounts,
-                transfer_checked_ix(spl_token, accs, &TransferCheckedIxData::new(amt, decimals)),
+                &spl_token_key,
+                TransferCheckedIxData::new(amt, decimals).as_buf(),
+                transfer_checked_ix_account_handle_perms(accs),
                 &[],
             )
         }

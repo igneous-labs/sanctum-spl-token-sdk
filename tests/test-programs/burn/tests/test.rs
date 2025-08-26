@@ -12,7 +12,7 @@ use sanctum_spl_token_jiminy::sanctum_spl_token_core::instructions::burn::{
 };
 use sanctum_spl_token_test_utils::{
     account_from_mint, account_from_token_acc, init_mint_acc, is_tx_balanced,
-    key_signer_writable_to_metas, silence_mollusk_prog_logs, token_acc_for_trf,
+    key_signer_writable_to_metas, save_cus_to_file, silence_mollusk_prog_logs, token_acc_for_trf,
 };
 use solana_account::Account;
 use solana_pubkey::Pubkey;
@@ -46,7 +46,6 @@ thread_local! {
     };
 }
 
-// CUs: 5901
 #[test]
 fn burn_all_cus() {
     let accounts = ix_accounts(
@@ -68,8 +67,6 @@ fn burn_all_cus() {
 
         raw_result.unwrap();
 
-        eprintln!("{compute_units_consumed} CUs");
-
         assert!(is_tx_balanced(&accounts, &resulting_accounts));
 
         let mint_acc = &resulting_accounts[MINT_ACC_IDX].1;
@@ -79,10 +76,11 @@ fn burn_all_cus() {
         );
         let from_acc = &resulting_accounts[FROM_ACC_IDX].1;
         assert_eq!(0, TokenAccount::unpack(&from_acc.data).unwrap().amount);
+
+        save_cus_to_file("all", compute_units_consumed);
     });
 }
 
-// CUs: 5863
 #[test]
 fn burn_arg_cus() {
     let accounts = ix_accounts(
@@ -104,8 +102,6 @@ fn burn_arg_cus() {
 
         raw_result.unwrap();
 
-        eprintln!("{compute_units_consumed} CUs");
-
         assert!(is_tx_balanced(&accounts, &resulting_accounts));
 
         let mint_acc = &resulting_accounts[MINT_ACC_IDX].1;
@@ -115,6 +111,8 @@ fn burn_arg_cus() {
             INIT_AMT - AMT,
             TokenAccount::unpack(&from_acc.data).unwrap().amount
         );
+
+        save_cus_to_file("arg", compute_units_consumed);
     });
 }
 

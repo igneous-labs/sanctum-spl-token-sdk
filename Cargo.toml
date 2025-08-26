@@ -28,8 +28,8 @@ jiminy-entrypoint = { git = "https://github.com/igneous-labs/jiminy.git", branch
 proptest = { version = "^1" }
 
 # solana crates (for dev)
-mollusk-svm = "^0.4"
-mollusk-svm-programs-token = { version = "^0.4", default-features = false, features = ["token"] }
+mollusk-svm = "^0.5"
+mollusk-svm-programs-token = { version = "^0.5", default-features = false, features = ["token"] }
 solana-account = "^2"
 solana-logger = "^2"
 solana-pubkey = "^2"
