@@ -25,23 +25,24 @@ fn process_ix(
     _data: &[u8],
     _prog_id: &[u8; 32],
 ) -> Result<(), ProgramError> {
-    let [spl_token, account_to_close, refund_rent_to, auth] = accounts.as_slice() else {
+    let [spl_token, close, dst, auth] = accounts.as_slice() else {
         return Err(ProgramError::from_builtin(
             BuiltInProgramError::NotEnoughAccountKeys,
         ));
     };
-    let [spl_token, account_to_close, refund_rent_to, auth] =
-        [spl_token, account_to_close, refund_rent_to, auth].map(|h| *h);
+    let [spl_token, close, dst, auth] = [spl_token, close, dst, auth].map(|h| *h);
 
     let spl_token_key = *accounts.get(spl_token).key();
+
+    // Using invoke_signed instead of invoke_fwd to test that AccountPerms are correct
     Cpi::new().invoke_signed(
         accounts,
         &spl_token_key,
         CloseAccountIxData::as_buf(),
         close_account_ix_account_handle_perms(
             NewCloseAccountIxAccsBuilder::start()
-                .with_account_to_close(account_to_close)
-                .with_refund_rent_to(refund_rent_to)
+                .with_close(close)
+                .with_dst(dst)
                 .with_auth(auth)
                 .build(),
         ),

@@ -8,8 +8,8 @@ use crate::instructions::internal_utils::impl_memset;
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
 pub struct CloseAccountIxAccs<T> {
-    pub account_to_close: T,
-    pub refund_rent_to: T,
+    pub close: T,
+    pub dst: T,
     pub auth: T,
 }
 
@@ -24,8 +24,8 @@ pub const CLOSE_ACCOUNT_IX_IS_SIGNER: CloseAccountIxAccsFlag =
 
 pub const CLOSE_ACCOUNT_IX_IS_WRITABLE: CloseAccountIxAccsFlag =
     CloseAccountIxAccsFlag::memset(false)
-        .const_with_account_to_close(true)
-        .const_with_refund_rent_to(true);
+        .const_with_close(true)
+        .const_with_dst(true);
 
 // Data
 

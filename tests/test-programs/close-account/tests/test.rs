@@ -22,15 +22,13 @@ use spl_token::{
 const PROG_NAME: &str = "close_account_test";
 const PROG_ID: Pubkey = solana_pubkey::pubkey!("C1ose2J1zuuf34zuZfNNdjJz4MajzcpgUnLdBKdcs5wg");
 
-const ACCOUNT_TO_CLOSE: Pubkey =
-    solana_pubkey::pubkey!("FmqrDYpnekE92iPotx8PGQed8fQ9DbeMuE7ASeA9Q72x");
-const REFUND_RENT_TO: Pubkey =
-    solana_pubkey::pubkey!("2mQbNpB6tbF6cguY7M6NjGozGLTUwJVeUBceWqEH3gkt");
+const CLOSE: Pubkey = solana_pubkey::pubkey!("FmqrDYpnekE92iPotx8PGQed8fQ9DbeMuE7ASeA9Q72x");
+const DST: Pubkey = solana_pubkey::pubkey!("2mQbNpB6tbF6cguY7M6NjGozGLTUwJVeUBceWqEH3gkt");
 const AUTH: Pubkey = solana_pubkey::pubkey!("2AHbbAHQQrQsEP7yrE9PGWpkn7Uz27PKJBByRwkurnWG");
 const MINT: Pubkey = solana_pubkey::pubkey!("5oVNBeEEQvYi1cX3ir8Dx5n1P7pdxydbGF2X4TxVusJm");
 
-const ACCOUNT_TO_CLOSE_ACC_IDX: usize = 1;
-const REFUND_RENT_TO_ACC_IDX: usize = 2;
+const CLOSE_ACC_IDX: usize = 1;
+const DST_ACC_IDX: usize = 2;
 
 thread_local! {
     static SVM: Mollusk = {
@@ -47,15 +45,15 @@ fn save_binsize() {
 
 #[test]
 fn close_account_cus() {
-    let refund_rent_to_initial_lamports: u64 = 5_000_000_000;
+    let dst_initial_lamports: u64 = 5_000_000_000;
     let accounts = ix_accounts(
-        ACCOUNT_TO_CLOSE,
+        CLOSE,
         token_acc_for_trf(MINT, 0, false, AUTH),
-        REFUND_RENT_TO,
-        refund_rent_to_initial_lamports,
+        DST,
+        dst_initial_lamports,
         AUTH,
     );
-    let instr = ix(ACCOUNT_TO_CLOSE, REFUND_RENT_TO, AUTH);
+    let instr = ix(CLOSE, DST, AUTH);
 
     SVM.with(|svm| {
         let InstructionResult {
@@ -70,15 +68,15 @@ fn close_account_cus() {
         assert!(is_tx_balanced(&accounts, &resulting_accounts));
 
         // Account should be cleared
-        let account_to_close_acc = &resulting_accounts[ACCOUNT_TO_CLOSE_ACC_IDX].1;
-        assert_eq!(0, account_to_close_acc.lamports);
-        assert!(account_to_close_acc.data.is_empty());
+        let close_acc = &resulting_accounts[CLOSE_ACC_IDX].1;
+        assert_eq!(0, close_acc.lamports);
+        assert!(close_acc.data.is_empty());
 
-        // Refund rent to should receive all lamports
-        let refund_rent_to_acc = &resulting_accounts[REFUND_RENT_TO_ACC_IDX].1;
+        // Destination should receive all lamports
+        let dst_acc = &resulting_accounts[DST_ACC_IDX].1;
         assert_eq!(
-            refund_rent_to_initial_lamports + TOKEN_ACC_RENT_EXEMPT_LAMPORTS,
-            refund_rent_to_acc.lamports
+            dst_initial_lamports + TOKEN_ACC_RENT_EXEMPT_LAMPORTS,
+            dst_acc.lamports
         );
 
         save_cus_to_file("close", compute_units_consumed);
@@ -88,24 +86,24 @@ fn close_account_cus() {
 proptest! {
     #[test]
     fn close_account_all_valid_cases(
-        (mint, account_to_close, refund_rent_to) in
+        (mint, close, dst) in
             any::<[u8; 32]>().prop_flat_map(|mint| (Just(mint), any::<[u8; 32]>().prop_filter("", move |k| *k != mint)))
-                .prop_flat_map(|(mint, account)| (Just(mint), Just(account),  any::<[u8; 32]>().prop_filter("", move |k| *k != mint && *k != account))),
+                .prop_flat_map(|(mint, close)| (Just(mint), Just(close),  any::<[u8; 32]>().prop_filter("", move |k| *k != mint && *k != close))),
         auth: [u8; 32],
-        refund_rent_to_initial_lamports in 0u64..=u64::MAX - TOKEN_ACC_RENT_EXEMPT_LAMPORTS,
+        dst_initial_lamports in 0u64..=u64::MAX - TOKEN_ACC_RENT_EXEMPT_LAMPORTS,
     ) {
-        let [mint, account_to_close, refund_rent_to, auth] = [mint, account_to_close, refund_rent_to, auth]
+        let [mint, close, dst, auth] = [mint, close, dst, auth]
             .map(Pubkey::new_from_array);
         silence_mollusk_prog_logs();
 
         let accounts = ix_accounts(
-            account_to_close,
+            close,
             token_acc_for_trf(mint, 0, false, auth),
-            refund_rent_to,
-            refund_rent_to_initial_lamports,
+            dst,
+            dst_initial_lamports,
             auth,
         );
-        let instr = ix(account_to_close, refund_rent_to, auth);
+        let instr = ix(close, dst, auth);
 
         SVM.with(|svm| {
             let InstructionResult {
@@ -119,15 +117,15 @@ proptest! {
             prop_assert!(is_tx_balanced(&accounts, &resulting_accounts));
 
             // Account should be cleared
-            let account_to_close_acc = &resulting_accounts[ACCOUNT_TO_CLOSE_ACC_IDX].1;
-            prop_assert_eq!(0, account_to_close_acc.lamports);
-            prop_assert!(account_to_close_acc.data.is_empty());
+            let close_acc = &resulting_accounts[CLOSE_ACC_IDX].1;
+            prop_assert_eq!(0, close_acc.lamports);
+            prop_assert!(close_acc.data.is_empty());
 
             // Refund rent to should receive all lamports
-            let refund_rent_to_acc = &resulting_accounts[REFUND_RENT_TO_ACC_IDX].1;
+            let dst_acc = &resulting_accounts[DST_ACC_IDX].1;
             prop_assert_eq!(
-                refund_rent_to_initial_lamports + TOKEN_ACC_RENT_EXEMPT_LAMPORTS,
-                refund_rent_to_acc.lamports
+                dst_initial_lamports + TOKEN_ACC_RENT_EXEMPT_LAMPORTS,
+                dst_acc.lamports
             );
 
             Ok(())
@@ -136,22 +134,19 @@ proptest! {
 }
 
 fn ix_accounts(
-    account_to_close: Pubkey,
-    account_to_close_acc: TokenAccount,
-    refund_rent_to: Pubkey,
-    refund_rent_to_lamports: u64,
+    close: Pubkey,
+    close_acc: TokenAccount,
+    dst: Pubkey,
+    dst_lamports: u64,
     auth: Pubkey,
 ) -> [(Pubkey, Account); 4] {
     [
         mollusk_svm_programs_token::token::keyed_account(),
+        (close, account_from_token_acc(close_acc)),
         (
-            account_to_close,
-            account_from_token_acc(account_to_close_acc),
-        ),
-        (
-            refund_rent_to,
+            dst,
             Account {
-                lamports: refund_rent_to_lamports,
+                lamports: dst_lamports,
                 ..Account::default()
             },
         ),
@@ -159,7 +154,7 @@ fn ix_accounts(
     ]
 }
 
-fn ix(account_to_close: Pubkey, refund_rent_to: Pubkey, auth: Pubkey) -> Instruction {
+fn ix(close: Pubkey, dst: Pubkey, auth: Pubkey) -> Instruction {
     type CloseAccountIxKeys = CloseAccountIxAccs<Pubkey>;
 
     Instruction {
@@ -171,8 +166,8 @@ fn ix(account_to_close: Pubkey, refund_rent_to: Pubkey, auth: Pubkey) -> Instruc
         })
         .chain(key_signer_writable_to_metas(
             &CloseAccountIxKeys::memset(PROG_ID)
-                .with_account_to_close(account_to_close)
-                .with_refund_rent_to(refund_rent_to)
+                .with_close(close)
+                .with_dst(dst)
                 .with_auth(auth)
                 .0,
             &CLOSE_ACCOUNT_IX_IS_SIGNER.0,
