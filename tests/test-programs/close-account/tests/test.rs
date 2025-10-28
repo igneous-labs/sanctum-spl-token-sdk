@@ -121,7 +121,7 @@ proptest! {
             prop_assert_eq!(0, close_acc.lamports);
             prop_assert!(close_acc.data.is_empty());
 
-            // Refund rent to should receive all lamports
+            // Destination should receive all lamports
             let dst_acc = &resulting_accounts[DST_ACC_IDX].1;
             prop_assert_eq!(
                 dst_initial_lamports + TOKEN_ACC_RENT_EXEMPT_LAMPORTS,
