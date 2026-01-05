@@ -1097,6 +1097,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "init-account-test"
+version = "0.1.0"
+dependencies = [
+ "jiminy-cpi",
+ "jiminy-entrypoint",
+ "mollusk-svm",
+ "mollusk-svm-programs-token",
+ "proptest",
+ "sanctum-spl-token-jiminy",
+ "sanctum-spl-token-test-utils",
+ "solana-account",
+ "solana-pubkey 3.0.0",
+ "spl-token",
+]
+
+[[package]]
 name = "is_terminal_polyfill"
 version = "1.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

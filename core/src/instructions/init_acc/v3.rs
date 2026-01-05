@@ -6,7 +6,15 @@ use crate::instructions::internal_utils::{impl_memset, AddrIxData};
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
 pub struct InitAcc3IxAccs<T> {
+    /// The token account to be initialized.
+    ///
+    /// Must be
+    /// - rent exempt
+    /// - owner set to token program
+    /// - allocated to token account space
     pub init: T,
+
+    /// Mint that `init` is of
     pub mint: T,
 }
 

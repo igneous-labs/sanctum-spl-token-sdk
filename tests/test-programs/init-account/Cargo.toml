@@ -1,0 +1,27 @@
+[package]
+name = "init-account-test"
+edition.workspace = true
+version.workspace = true
+
+[features]
+default = []
+test-sbf = []
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+jiminy-cpi = { workspace = true }
+jiminy-entrypoint = { workspace = true }
+sanctum-spl-token-jiminy = { workspace = true }
+
+[dev-dependencies]
+mollusk-svm = { workspace = true }
+mollusk-svm-programs-token = { workspace = true }
+sanctum-spl-token-test-utils = { workspace = true }
+solana-account = { workspace = true }
+solana-pubkey = { workspace = true }
+spl-token = { workspace = true }
+
+[target.'cfg(not(target_os = "solana"))'.dev-dependencies]
+proptest = { workspace = true }
