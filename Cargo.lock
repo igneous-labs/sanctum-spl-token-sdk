@@ -989,9 +989,9 @@ dependencies = [
 
 [[package]]
 name = "generic-array-struct"
-version = "0.3.1"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc508c7c6ae3639310b4c5523d488818280fd1808446c96db1ada5c41638966d"
+checksum = "a110495b7878dc5d64496e8b596e2f4b2452cc48b5f179a5577e34c49d08248f"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -1094,6 +1094,22 @@ checksum = "cea70ddb795996207ad57735b50c5982d8844f38ba9ee5f1aedcfb708a2aa11e"
 dependencies = [
  "equivalent",
  "hashbrown 0.15.2",
+]
+
+[[package]]
+name = "init-account-test"
+version = "0.1.0"
+dependencies = [
+ "jiminy-cpi",
+ "jiminy-entrypoint",
+ "mollusk-svm",
+ "mollusk-svm-programs-token",
+ "proptest",
+ "sanctum-spl-token-jiminy",
+ "sanctum-spl-token-test-utils",
+ "solana-account",
+ "solana-pubkey 3.0.0",
+ "spl-token",
 ]
 
 [[package]]

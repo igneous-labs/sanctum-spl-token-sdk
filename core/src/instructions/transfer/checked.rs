@@ -1,10 +1,10 @@
 use generic_array_struct::generic_array_struct;
 
-use crate::instructions::internal_utils::{caba, impl_memset};
+use crate::instructions::internal_utils::{impl_memset, AmtCheckedIxData};
 
 // Accounts
 
-#[generic_array_struct(builder pub)]
+#[generic_array_struct(builder destr trymap pub)]
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
 pub struct TransferCheckedIxAccs<T> {
@@ -14,9 +14,7 @@ pub struct TransferCheckedIxAccs<T> {
     pub auth: T,
 }
 
-impl<T: Copy> TransferCheckedIxAccs<T> {
-    impl_memset!(TRANSFER_CHECKED_IX_ACCS_LEN);
-}
+impl_memset!(TransferCheckedIxAccs);
 
 pub type TransferCheckedIxAccsFlag = TransferCheckedIxAccs<bool>;
 
@@ -32,28 +30,6 @@ pub const TRANSFER_CHECKED_IX_IS_WRITABLE: TransferCheckedIxAccsFlag =
 
 pub const TRANSFER_CHECKED_IX_DISCM: u8 = 12;
 
-pub const TRANSFER_CHECKED_IX_DATA_LEN: usize = 10;
+pub const TRANSFER_CHECKED_IX_DATA_LEN: usize = TransferCheckedIxData::LEN;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[repr(transparent)]
-pub struct TransferCheckedIxData([u8; TRANSFER_CHECKED_IX_DATA_LEN]);
-
-impl TransferCheckedIxData {
-    #[inline]
-    pub const fn new(amount: u64, decimals: u8) -> Self {
-        const A: usize = TRANSFER_CHECKED_IX_DATA_LEN;
-
-        let mut d = [0u8; A];
-
-        d = caba::<A, 0, 1>(d, &[TRANSFER_CHECKED_IX_DISCM]);
-        d = caba::<A, 1, 8>(d, &amount.to_le_bytes());
-        d = caba::<A, 9, 1>(d, &[decimals]);
-
-        Self(d)
-    }
-
-    #[inline]
-    pub const fn as_buf(&self) -> &[u8; TRANSFER_CHECKED_IX_DATA_LEN] {
-        &self.0
-    }
-}
+pub type TransferCheckedIxData = AmtCheckedIxData<TRANSFER_CHECKED_IX_DISCM>;
