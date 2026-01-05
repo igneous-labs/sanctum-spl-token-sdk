@@ -8,6 +8,7 @@ pub mod burn;
 pub mod close_account;
 pub mod init_acc;
 pub mod mint_to;
+pub mod sync_native;
 pub mod transfer;
 
 /// `impl IntoIterator<Item = (AccountHandle, AccountPerms)>`
