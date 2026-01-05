@@ -9,9 +9,8 @@ use sanctum_spl_token_jiminy::sanctum_spl_token_core::instructions::burn::{
     BurnIxAccs, BURN_IX_IS_SIGNER, BURN_IX_IS_WRITABLE,
 };
 use sanctum_spl_token_test_utils::{
-    account_from_mint, account_from_token_acc, init_mint_acc, is_tx_balanced,
-    key_signer_writable_to_metas, save_binsize_to_file, save_cus_to_file,
-    silence_mollusk_prog_logs, token_acc_for_trf,
+    account_from_mint, account_from_token_acc, bench_binsize, expect_test::expect, init_mint_acc,
+    is_tx_balanced, key_signer_writable_to_metas, silence_mollusk_prog_logs, token_acc_for_trf,
 };
 use solana_account::Account;
 use solana_pubkey::Pubkey;
@@ -47,7 +46,7 @@ thread_local! {
 
 #[test]
 fn save_binsize() {
-    save_binsize_to_file(PROG_NAME);
+    bench_binsize(PROG_NAME, expect!["3336"]);
 }
 
 #[test]
@@ -61,7 +60,7 @@ fn burn_all_cus() {
     );
     let instr = ix(FROM, MINT, AUTH, None);
 
-    SVM.with(|svm| {
+    let cus = SVM.with(|svm| {
         let InstructionResult {
             compute_units_consumed,
             raw_result,
@@ -80,9 +79,10 @@ fn burn_all_cus() {
         );
         let from_acc = &resulting_accounts[FROM_ACC_IDX].1;
         assert_eq!(0, TokenAccount::unpack(&from_acc.data).unwrap().amount);
-
-        save_cus_to_file("all", compute_units_consumed);
+        compute_units_consumed
     });
+
+    expect!["5849"].assert_eq(&cus.to_string());
 }
 
 #[test]
@@ -96,7 +96,7 @@ fn burn_arg_cus() {
     );
     let instr = ix(FROM, MINT, AUTH, Some(AMT));
 
-    SVM.with(|svm| {
+    let cus = SVM.with(|svm| {
         let InstructionResult {
             compute_units_consumed,
             raw_result,
@@ -116,8 +116,10 @@ fn burn_arg_cus() {
             TokenAccount::unpack(&from_acc.data).unwrap().amount
         );
 
-        save_cus_to_file("arg", compute_units_consumed);
+        compute_units_consumed
     });
+
+    expect!["5809"].assert_eq(&cus.to_string());
 }
 
 proptest! {

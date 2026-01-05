@@ -9,6 +9,7 @@ solana-pubkey = { workspace = true }
 spl-token = { workspace = true }
 
 [target.'cfg(not(target_os = "solana"))'.dependencies]
+expect-test = { workspace = true }
 mollusk-svm = { workspace = true }
 proptest = { workspace = true }
 solana-logger = { workspace = true }

@@ -25,15 +25,16 @@ jiminy-cpi = { git = "https://github.com/igneous-labs/jiminy.git", branch = "mas
 jiminy-entrypoint = { git = "https://github.com/igneous-labs/jiminy.git", branch = "master" }
 
 # dev deps
-proptest = { version = "^1" }
+expect-test = { version = "^1", default-features = false }
+proptest = "^1"
 
 # solana crates (for dev)
-mollusk-svm = "^0.5"
-mollusk-svm-programs-token = { version = "^0.5", default-features = false, features = ["token"] }
-solana-account = "^2"
-solana-logger = "^2"
-solana-pubkey = "^2"
-spl-token = "^8"
+mollusk-svm = "^0.9"
+mollusk-svm-programs-token = { version = "^0.9", default-features = false, features = ["token"] }
+solana-account = "^3"
+solana-logger = "^3"
+solana-pubkey = "^3"
+spl-token = "^9"
 
 # workspace members
 sanctum-spl-token-core = { path = "core" }
