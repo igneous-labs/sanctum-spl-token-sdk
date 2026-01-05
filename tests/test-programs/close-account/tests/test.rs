@@ -9,8 +9,9 @@ use sanctum_spl_token_jiminy::sanctum_spl_token_core::instructions::close_accoun
     CloseAccountIxAccs, CLOSE_ACCOUNT_IX_IS_SIGNER, CLOSE_ACCOUNT_IX_IS_WRITABLE,
 };
 use sanctum_spl_token_test_utils::{
-    account_from_token_acc, is_tx_balanced, key_signer_writable_to_metas, save_binsize_to_file,
-    save_cus_to_file, silence_mollusk_prog_logs, token_acc_for_trf, TOKEN_ACC_RENT_EXEMPT_LAMPORTS,
+    account_from_token_acc, bench_binsize, expect_test::expect, is_tx_balanced,
+    key_signer_writable_to_metas, silence_mollusk_prog_logs, token_acc_for_trf,
+    TOKEN_ACC_RENT_EXEMPT_LAMPORTS,
 };
 use solana_account::Account;
 use solana_pubkey::Pubkey;
@@ -40,7 +41,7 @@ thread_local! {
 
 #[test]
 fn save_binsize() {
-    save_binsize_to_file(PROG_NAME);
+    bench_binsize(PROG_NAME, expect!["2864"]);
 }
 
 #[test]
@@ -55,7 +56,7 @@ fn close_account_cus() {
     );
     let instr = ix(CLOSE, DST, AUTH);
 
-    SVM.with(|svm| {
+    let cus = SVM.with(|svm| {
         let InstructionResult {
             compute_units_consumed,
             raw_result,
@@ -79,8 +80,10 @@ fn close_account_cus() {
             dst_acc.lamports
         );
 
-        save_cus_to_file("close", compute_units_consumed);
+        compute_units_consumed
     });
+
+    expect!["4151"].assert_eq(&cus.to_string());
 }
 
 proptest! {

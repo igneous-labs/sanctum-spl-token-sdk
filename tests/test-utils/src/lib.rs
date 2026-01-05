@@ -14,3 +14,6 @@ pub use conv::*;
 pub use file::*;
 pub use mollusk::*;
 pub use proptest::*;
+
+// Re-exports
+pub use expect_test;
