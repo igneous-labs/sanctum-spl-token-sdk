@@ -63,8 +63,8 @@ fn init_account3_cus() {
         assert!(is_tx_balanced(&accounts, &resulting_accounts));
 
         // Account should be created
-        let close_acc = &resulting_accounts[INIT_ACC_IDX].1;
-        let ta = TokenAccount::unpack(&close_acc.data).unwrap();
+        let init_acc = &resulting_accounts[INIT_ACC_IDX].1;
+        let ta = TokenAccount::unpack(&init_acc.data).unwrap();
         assert_eq!(ta.mint, MINT);
 
         compute_units_consumed
